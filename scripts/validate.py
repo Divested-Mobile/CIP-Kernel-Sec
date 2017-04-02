@@ -7,6 +7,8 @@ import yaml
 
 # Only SHA-1 for now
 _GIT_HASH_RE = re.compile(r'^[0-9a-f]{40}$')
+def is_git_hash(s):
+    return _GIT_HASH_RE.match(s) is not None
 
 def _validate_string(name, value):
     if type(value) is str:
@@ -42,7 +44,7 @@ def _validate_mapping_sequence_hash(name, value):
             if type(seq) is not list:
                 break
             for entry in seq:
-                if type(entry) is not str or not _GIT_HASH_RE.match(entry):
+                if type(entry) is not str or not is_git_hash(entry):
                     break # to outer break
             else:
                 continue
@@ -55,7 +57,7 @@ def _validate_mapping_sequence_hash(name, value):
 def _validate_hashmapping_string(name, value):
     if type(value) is dict:
         for h, v in value.items():
-            if type(h) is not str or not _GIT_HASH_RE.match(h):
+            if type(h) is not str or not is_git_hash(h):
                 break
             if type(v) is not str:
                 break
