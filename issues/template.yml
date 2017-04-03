@@ -1,4 +1,5 @@
-summary: One line summary of issue (required)
+description: |
+  Summary of issue, ideally the description MITRE uses. (required)
 advisory: |
   Longer explanation of issue, suitable as basis for advisory text.
   This is optional but should be added by the time fixes are released.

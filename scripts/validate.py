@@ -67,7 +67,7 @@ def _validate_hashmapping_string(name, value):
                      name)
 
 _ALL_FIELDS = {
-    'summary': _validate_string,
+    'description': _validate_string,
     'advisory': _validate_string,
     'references': _validate_sequence_string,
     'aliases': _validate_sequence_string,
@@ -79,7 +79,7 @@ _ALL_FIELDS = {
     'fix-depends-on': _validate_hashmapping_string,
     'tests': _validate_sequence_string
 }
-_REQUIRED_FIELDS = ['summary']
+_REQUIRED_FIELDS = ['description']
 
 def validate(issue):
     for name in _REQUIRED_FIELDS:

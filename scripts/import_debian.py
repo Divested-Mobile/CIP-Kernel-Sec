@@ -26,7 +26,7 @@ def load_debian_issue(f):
     deb_issue = deb822.Deb822(f)
     issue = {}
 
-    issue['summary'] = deb_issue['Description']
+    issue['description'] = deb_issue['Description']
 
     references = [
         ref for ref in
