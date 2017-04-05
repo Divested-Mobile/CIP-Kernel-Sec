@@ -4,6 +4,7 @@ import os.path
 import re
 import yaml
 import yaml.dumper
+import yaml.loader
 
 # Only SHA-1 for now
 _GIT_HASH_RE = re.compile(r'^[0-9a-f]{40}$')
@@ -110,9 +111,47 @@ class _IssueDumper(yaml.dumper.SafeDumper):
 _IssueDumper.add_representer(datetime.datetime, _IssueDumper.represent_datetime)
 _IssueDumper.add_representer(str, _IssueDumper.represent_str)
 
+class _IssueLoader(yaml.loader.SafeLoader):
+    # Keep timezone information instead of adjusting the timestamp and then
+    # discarding it.
+    def construct_yaml_timestamp(self, node):
+        value = self.construct_scalar(node)
+        match = self.timestamp_regexp.match(node.value)
+        values = match.groupdict()
+        year = int(values['year'])
+        month = int(values['month'])
+        day = int(values['day'])
+        if not values['hour']:
+            return datetime.date(year, month, day)
+        hour = int(values['hour'])
+        minute = int(values['minute'])
+        second = int(values['second'])
+        fraction = 0
+        if values['fraction']:
+            fraction = values['fraction'][:6]
+            while len(fraction) < 6:
+                fraction += '0'
+            fraction = int(fraction)
+        if values['tz_sign']:
+            tz_hour = int(values['tz_hour'])
+            tz_minute = int(values['tz_minute'] or 0)
+            delta = datetime.timedelta(hours=tz_hour, minutes=tz_minute)
+            if values['tz_sign'] == '-':
+                delta = -delta
+            tzinfo = datetime.timezone(delta)
+        elif values['tz'] == 'Z':
+            tzinfo = datetime.timezone.utc
+        else:
+            tzinfo = None
+        return datetime.datetime(year, month, day, hour, minute, second,
+                                 fraction, tzinfo)
+
+_IssueLoader.add_constructor('tag:yaml.org,2002:timestamp',
+                             _IssueLoader.construct_yaml_timestamp)
+
 def load_filename(name):
     with open(name) as f:
-        return yaml.safe_load(f)
+        return yaml.load(f, Loader=_IssueLoader)
 
 def save_filename(name, issue):
     with open(name, 'w') as f:
