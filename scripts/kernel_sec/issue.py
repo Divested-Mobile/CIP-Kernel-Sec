@@ -128,6 +128,14 @@ class _IssueDumper(yaml.dumper.SafeDumper):
 
         return node
 
+    def represent_sequence(self, tag, sequence, flow_style=None):
+        # Use block style for top-level fields
+        for child in self.__root.values():
+            if sequence is child:
+                flow_style = False
+
+        return super().represent_sequence(tag, sequence, flow_style)
+
 _IssueDumper.add_representer(datetime.datetime, _IssueDumper.represent_datetime)
 _IssueDumper.add_representer(str, _IssueDumper.represent_str)
 
