@@ -122,8 +122,7 @@ def main():
                                '.'],
                               cwd=IMPORT_DIR)
 
-    our_issues = dict((os.path.basename(name)[:-4], name) for name in
-                       glob.glob('issues/CVE-*.yml'))
+    our_issues = dict(kernel_sec.issue.get_list())
     their_issues = dict((os.path.basename(name), name) for name in
                         glob.glob(IMPORT_DIR + '/active/CVE-*'))
 

@@ -1,4 +1,6 @@
 import datetime
+import glob
+import os.path
 import re
 
 # Only SHA-1 for now
@@ -89,3 +91,7 @@ def validate(issue):
             raise ValueError('field "%s" is unknown' % name)
         else:
             validator(name, value)
+
+def get_list():
+    return [(os.path.basename(name)[:-4], name) for name in
+            glob.glob('issues/CVE-*.yml')]

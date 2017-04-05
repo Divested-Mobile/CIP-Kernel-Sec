@@ -3,14 +3,14 @@
 import sys
 import yaml
 
-from kernel_sec.issue import validate
+from kernel_sec.issue import get_list, validate
 
 def main(*names):
     import glob
 
     rc = 0
     if len(names) == 0:
-        names = glob.glob('issues/CVE-*.yml')
+        names = [name for (cve_id, name) in get_list()]
 
     for name in names:
         try:
