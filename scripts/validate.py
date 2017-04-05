@@ -1,21 +1,19 @@
 #!/usr/bin/python3
 
 import sys
-import yaml
 
-from kernel_sec.issue import get_list, validate
+from kernel_sec.issue import get_filename, get_list, load, load_filename, validate
 
 def main(*names):
     import glob
 
     rc = 0
     if len(names) == 0:
-        names = [name for (cve_id, name) in get_list()]
+        names = [get_filename(cve_id) for cve_id in get_list()]
 
     for name in names:
         try:
-            with open(name) as f:
-                validate(yaml.safe_load(f))
+            validate(load_filename(name))
         except Exception as e:
             rc = 1
             print('%s: %s' % (name, e), file=sys.stderr)

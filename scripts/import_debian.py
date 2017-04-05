@@ -10,7 +10,6 @@ import os.path
 import re
 import subprocess
 import sys
-import yaml
 
 import kernel_sec.issue
 
@@ -122,7 +121,7 @@ def main():
                                '.'],
                               cwd=IMPORT_DIR)
 
-    our_issues = dict(kernel_sec.issue.get_list())
+    our_issues = set(kernel_sec.issue.get_list())
     their_issues = dict((os.path.basename(name), name) for name in
                         glob.glob(IMPORT_DIR + '/active/CVE-*'))
 
@@ -143,16 +142,12 @@ def main():
                 print('Failed to parse %s' % their_filename, file=sys.stderr)
                 continue
 
-        try:
-            our_filename = our_issues[cve_id]
-        except KeyError:
+        if cve_id not in our_issues:
             # Copy theirs
             ours = theirs
-            our_filename = 'issues/%s.yml' % cve_id
         else:
             # Merge into ours
-            with open(our_filename) as f:
-                ours = yaml.safe_load(f)
+            ours = kernel_sec.issue.load(cve_id)
             kernel_sec.issue.validate(ours) # check that it's good to start with
             if not merge_into(ours, theirs):
                 continue
@@ -163,8 +158,7 @@ def main():
             print('%s: %s' % (their_filename, e), file=sys.stderr)
             continue
 
-        with open(our_filename, 'w') as f:
-            yaml.safe_dump(ours, f)
+        kernel_sec.issue.save(cve_id, ours)
 
 if __name__ == '__main__':
     main()

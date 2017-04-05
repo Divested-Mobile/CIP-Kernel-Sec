@@ -2,6 +2,7 @@ import datetime
 import glob
 import os.path
 import re
+import yaml
 
 # Only SHA-1 for now
 _GIT_HASH_RE = re.compile(r'^[0-9a-f]{40}$')
@@ -92,6 +93,22 @@ def validate(issue):
         else:
             validator(name, value)
 
+def load_filename(name):
+    with open(name) as f:
+        return yaml.safe_load(f)
+
+def save_filename(name, issue):
+    with open(name, 'w') as f:
+        yaml.safe_dump(issue, f)
+
 def get_list():
-    return [(os.path.basename(name)[:-4], name) for name in
-            glob.glob('issues/CVE-*.yml')]
+    return [os.path.basename(name)[:-4] for name in glob.glob('issues/CVE-*.yml')]
+
+def get_filename(cve_id):
+    return 'issues/%s.yml' % cve_id
+
+def load(cve_id):
+    return load_filename(get_filename(cve_id))
+
+def save(cve_id, issue):
+    save_filename(get_filename(cve_id), issue)
