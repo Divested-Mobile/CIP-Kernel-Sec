@@ -10,8 +10,9 @@ import os.path
 import re
 import subprocess
 import sys
-import validate
 import yaml
+
+import kernel_sec.issue
 
 IMPORT_DIR = 'import/debian'
 
@@ -68,7 +69,7 @@ def load_debian_issue(f):
             # These are *usually* git commit hashes but could be patch names
             hashes = [ref
                       for ref in COMMA_SEP_RE.split(match.group('changerefs'))
-                      if validate.is_git_hash(ref)]
+                      if kernel_sec.issue.is_git_hash(ref)]
             if hashes:
                 issue.setdefault('fixed-by', {})[branch] = hashes
 
@@ -153,12 +154,12 @@ def main():
             # Merge into ours
             with open(our_filename) as f:
                 ours = yaml.safe_load(f)
-            validate.validate(ours) # check that it's good to start with
+            kernel_sec.issue.validate(ours) # check that it's good to start with
             if not merge_into(ours, theirs):
                 continue
 
         try:
-            validate.validate(ours)
+            kernel_sec.issue.validate(ours)
         except ValueError as e:
             print('%s: %s' % (their_filename, e), file=sys.stderr)
             continue
