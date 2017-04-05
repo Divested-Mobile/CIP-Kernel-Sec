@@ -67,19 +67,20 @@ def _validate_hashmapping_string(name, value):
     raise ValueError('%s must be a mapping from git hashes to strings' %
                      name)
 
-_ALL_FIELDS = {
-    'description': _validate_string,
-    'advisory': _validate_string,
-    'references': _validate_sequence_string,
-    'aliases': _validate_sequence_string,
-    'comments': _validate_mapping_string,
-    'reporters': _validate_sequence_string,
-    'embargo-end': _validate_datetime,
-    'introduced-by': _validate_mapping_sequence_hash,
-    'fixed-by': _validate_mapping_sequence_hash,
-    'fix-depends-on': _validate_hashmapping_string,
-    'tests': _validate_sequence_string
-}
+_ALL_FIELDS = [
+    ('description',     _validate_string),
+    ('advisory',        _validate_string),
+    ('references',      _validate_sequence_string),
+    ('aliases',         _validate_sequence_string),
+    ('comments',        _validate_mapping_string),
+    ('reporters',       _validate_sequence_string),
+    ('embargo-end',     _validate_datetime),
+    ('introduced-by',   _validate_mapping_sequence_hash),
+    ('fixed-by',        _validate_mapping_sequence_hash),
+    ('fix-depends-on',  _validate_hashmapping_string),
+    ('tests',           _validate_sequence_string)
+]
+_FIELD_VALIDATOR = dict(_ALL_FIELDS)
 _REQUIRED_FIELDS = ['description']
 
 def validate(issue):
@@ -89,7 +90,7 @@ def validate(issue):
 
     for name, value in issue.items():
         try:
-            validator = _ALL_FIELDS[name]
+            validator = _FIELD_VALIDATOR[name]
         except KeyError:
             raise ValueError('field "%s" is unknown' % name)
         else:
