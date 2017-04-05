@@ -3,6 +3,7 @@ import glob
 import os.path
 import re
 import yaml
+import yaml.dumper
 
 # Only SHA-1 for now
 _GIT_HASH_RE = re.compile(r'^[0-9a-f]{40}$')
@@ -93,13 +94,29 @@ def validate(issue):
         else:
             validator(name, value)
 
+class _IssueDumper(yaml.dumper.SafeDumper):
+    # ISO 8601 specifies 'T' to separate date & time, but for some reason PyYAML
+    # uses ' ' by default
+    def represent_datetime(self, data):
+        return self.represent_scalar('tag:yaml.org,2002:timestamp',
+                                     data.isoformat())
+
+    # Use literal format if there are literal newlines, as this is much more
+    # readable
+    def represent_str(self, data):
+        return self.represent_scalar('tag:yaml.org,2002:str', data,
+                                     style=('|' if '\n' in data else None))
+
+_IssueDumper.add_representer(datetime.datetime, _IssueDumper.represent_datetime)
+_IssueDumper.add_representer(str, _IssueDumper.represent_str)
+
 def load_filename(name):
     with open(name) as f:
         return yaml.safe_load(f)
 
 def save_filename(name, issue):
     with open(name, 'w') as f:
-        yaml.safe_dump(issue, f)
+        yaml.dump(issue, f, Dumper=_IssueDumper)
 
 def get_list():
     return [os.path.basename(name)[:-4] for name in glob.glob('issues/CVE-*.yml')]
