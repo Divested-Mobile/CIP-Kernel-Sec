@@ -81,6 +81,7 @@ _ALL_FIELDS = [
     ('tests',           _validate_sequence_string)
 ]
 _FIELD_VALIDATOR = dict(_ALL_FIELDS)
+_FIELD_ORDER = dict((name, i) for i, (name, _) in enumerate(_ALL_FIELDS))
 _REQUIRED_FIELDS = ['description']
 
 def validate(issue):
@@ -97,6 +98,13 @@ def validate(issue):
             validator(name, value)
 
 class _IssueDumper(yaml.dumper.SafeDumper):
+    def represent(self, data):
+        self.__root = data
+        try:
+            return super().represent(data)
+        finally:
+            del self.__root
+
     # ISO 8601 specifies 'T' to separate date & time, but for some reason PyYAML
     # uses ' ' by default
     def represent_datetime(self, data):
@@ -108,6 +116,17 @@ class _IssueDumper(yaml.dumper.SafeDumper):
     def represent_str(self, data):
         return self.represent_scalar('tag:yaml.org,2002:str', data,
                                      style=('|' if '\n' in data else None))
+
+    def represent_mapping(self, tag, mapping, flow_style=None):
+        # Always use block style
+        node = super().represent_mapping(tag, mapping, False)
+
+        # Sort top-level fields into preferred order
+        if mapping is self.__root:
+            node.value.sort(
+                key=(lambda child: _FIELD_ORDER.get(child[0].value, 100)))
+
+        return node
 
 _IssueDumper.add_representer(datetime.datetime, _IssueDumper.represent_datetime)
 _IssueDumper.add_representer(str, _IssueDumper.represent_str)
