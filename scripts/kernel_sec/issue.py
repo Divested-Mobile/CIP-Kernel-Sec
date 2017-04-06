@@ -100,15 +100,28 @@ def validate(issue):
 def merge_into(ours, theirs):
     changed = False
 
+    def merge_list(field_name):
+        if field_name in theirs:
+            our_list = ours.setdefault(field_name, [])
+            for item in theirs[field_name]:
+                if item not in our_list:
+                    our_list.append(item)
+                    changed = True
+
+    def merge_commit_lists(field_name):
+        if field_name in theirs:
+            our_dict = ours.setdefault(field_name, {})
+            for branch, hashes in theirs[field_name].items():
+                our_hashes = our_dict.setdefault(branch, [])
+                for h in hashes:
+                    if h not in our_hashes:
+                        our_hashes.append(h)
+                        changed = True
+
     # Don't attempt to merge description.  As it is a mandatory field
     # we must already have a description.
 
-    if 'references' in theirs:
-        our_refs = ours.setdefault('references', [])
-        for ref in theirs['references']:
-            if ref not in our_refs:
-                our_refs.append(ref)
-                changed = True
+    merge_list('references')
 
     if 'comments' in theirs:
         our_comments = ours.setdefault('comments', {})
@@ -120,14 +133,9 @@ def merge_into(ours, theirs):
                 our_comments[name] = comment
                 changed = True
 
-    if 'fixed-by' in theirs:
-        our_fixed_by = ours.setdefault('fixed-by', {})
-        for branch, hashes in theirs['fixed-by'].items():
-            our_hashes = our_fixed_by.setdefault(branch, [])
-            for h in hashes:
-                if h not in our_hashes:
-                    our_hashes.append(h)
-                    changed = True
+    merge_list('reporters')
+    merge_commit_lists('introduced-by')
+    merge_commit_lists('fixed-by')
 
     return changed
 
