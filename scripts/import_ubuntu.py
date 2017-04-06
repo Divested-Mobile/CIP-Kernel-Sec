@@ -4,6 +4,7 @@
 # roughly documented in the README file.  See also the load_cve()
 # function in scripts/cve_lib.py.
 
+import datetime
 import glob
 import os
 import os.path
@@ -220,6 +221,16 @@ def load_ubuntu_issue(f):
 def merge_into(ours, theirs):
     return False
 
+# Ubuntu doesn't seem to retire issues any more, so only include issues
+# that are active and discovered either this year or last year
+def get_recent_issues():
+    this_year = datetime.datetime.utcnow().year
+    for filename in glob.glob(IMPORT_DIR + '/active/CVE-*'):
+        cve_id = os.path.basename(filename)
+        year = int(cve_id.split('-')[1])
+        if year >= this_year - 1:
+            yield (cve_id, filename)
+
 def main():
     os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
     if os.path.isdir(IMPORT_DIR + '/.bzr'):
@@ -229,14 +240,12 @@ def main():
                               cwd=IMPORT_DIR)
 
     our_issues = set(kernel_sec.issue.get_list())
-    their_issues = dict((os.path.basename(name), name) for name in
-                        glob.glob(IMPORT_DIR + '/active/CVE-*'))
+    their_issues = dict(get_recent_issues())
 
-    # Also look at ignored and retired issues that we already track,
-    # but not the huge number of historical ones
+    # Also look at any older issues that we already track
     for cve_id in our_issues:
         if cve_id not in their_issues:
-            for state in ['ignored', 'retired']:
+            for state in ['active', 'ignored', 'retired']:
                 their_filename = IMPORT_DIR + '/' + state + '/' + cve_id
                 if os.path.exists(their_filename):
                     their_issues[cve_id] = their_filename
