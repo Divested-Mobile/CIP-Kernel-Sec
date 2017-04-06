@@ -74,41 +74,6 @@ def load_debian_issue(f):
 
     return issue
 
-def merge_into(ours, theirs):
-    changed = False
-
-    # Don't attempt to merge description.  As it is a mandatory field
-    # we must already have a description.
-
-    if 'references' in theirs:
-        our_refs = ours.setdefault('references', [])
-        for ref in theirs['references']:
-            if ref not in our_refs:
-                our_refs.append(ref)
-                changed = True
-
-    if 'comments' in theirs:
-        our_comments = ours.setdefault('comments', {})
-        for name, comment in theirs['comments'].items():
-            # All imported comments have names starting 'Debian' so it
-            # should be safe to overwrite existing comments with the
-            # same name.
-            assert name.startswith('Debian')
-            if our_comments.get(name) != comment:
-                our_comments[name] = comment
-                changed = True
-
-    if 'fixed-by' in theirs:
-        our_fixed_by = ours.setdefault('fixed-by', {})
-        for branch, hashes in theirs['fixed-by'].items():
-            our_hashes = our_fixed_by.setdefault(branch, [])
-            for h in hashes:
-                if h not in our_hashes:
-                    our_hashes.append(h)
-                    changed = True
-
-    return changed
-
 def main():
     os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
     if os.path.isdir(IMPORT_DIR + '/.svn'):
@@ -149,7 +114,7 @@ def main():
             # Merge into ours
             ours = kernel_sec.issue.load(cve_id)
             kernel_sec.issue.validate(ours) # check that it's good to start with
-            if not merge_into(ours, theirs):
+            if not kernel_sec.issue.merge_into(ours, theirs):
                 continue
 
         try:

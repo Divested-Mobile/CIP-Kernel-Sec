@@ -97,6 +97,40 @@ def validate(issue):
         else:
             validator(name, value)
 
+def merge_into(ours, theirs):
+    changed = False
+
+    # Don't attempt to merge description.  As it is a mandatory field
+    # we must already have a description.
+
+    if 'references' in theirs:
+        our_refs = ours.setdefault('references', [])
+        for ref in theirs['references']:
+            if ref not in our_refs:
+                our_refs.append(ref)
+                changed = True
+
+    if 'comments' in theirs:
+        our_comments = ours.setdefault('comments', {})
+        for name, comment in theirs['comments'].items():
+            # All imported comments should have names qualified in
+            # some way so that it's safe to overwrite existing
+            # comments with the same name.
+            if our_comments.get(name) != comment:
+                our_comments[name] = comment
+                changed = True
+
+    if 'fixed-by' in theirs:
+        our_fixed_by = ours.setdefault('fixed-by', {})
+        for branch, hashes in theirs['fixed-by'].items():
+            our_hashes = our_fixed_by.setdefault(branch, [])
+            for h in hashes:
+                if h not in our_hashes:
+                    our_hashes.append(h)
+                    changed = True
+
+    return changed
+
 class _IssueDumper(yaml.dumper.SafeDumper):
     def represent(self, data):
         self.__root = data

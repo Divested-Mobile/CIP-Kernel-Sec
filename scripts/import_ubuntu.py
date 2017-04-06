@@ -234,9 +234,6 @@ def load_ubuntu_issue(f):
 
     return issue
 
-def merge_into(ours, theirs):
-    return False
-
 # Ubuntu doesn't seem to retire issues any more, so only include issues
 # that are active and discovered either this year or last year
 def get_recent_issues():
@@ -284,7 +281,7 @@ def main():
             # Merge into ours
             ours = kernel_sec.issue.load(cve_id)
             kernel_sec.issue.validate(ours) # check that it's good to start with
-            if not merge_into(ours, theirs):
+            if not kernel_sec.issue.merge_into(ours, theirs):
                 continue
 
         try:
