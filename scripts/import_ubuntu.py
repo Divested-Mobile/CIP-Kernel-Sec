@@ -18,6 +18,7 @@ IMPORT_DIR = 'import/ubuntu'
 
 BREAK_FIX_RE = re.compile(r'^break-fix: (?:([0-9a-f]{40})|[-\w]+)'
                           r' (?:([0-9a-f]{40})|[-\w]+)$')
+DISCOVERED_BY_SEP_RE = re.compile(r'(?:,\s*(?:and\s+)?|\s+and\s+)')
 
 # Based on load_cve() in scripts/cve_lib.py
 def load_cve(cve, strict=False):
@@ -207,7 +208,7 @@ def load_ubuntu_issue(f):
 
     disc = ubu_issue.get('Discovered-by', '').strip()
     if disc:
-        issue['reporters'] = [disc]
+        issue['reporters'] = DISCOVERED_BY_SEP_RE.split(disc)
 
     patches = ubu_issue.get('Patches_linux', '').strip()
     match = BREAK_FIX_RE.match(patches)
