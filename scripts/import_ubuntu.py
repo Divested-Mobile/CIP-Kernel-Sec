@@ -19,6 +19,7 @@ IMPORT_DIR = 'import/ubuntu'
 BREAK_FIX_RE = re.compile(r'^break-fix: (?:([0-9a-f]{40})|[-\w]+)'
                           r' (?:([0-9a-f]{40})|[-\w]+)$')
 DISCOVERED_BY_SEP_RE = re.compile(r'(?:,\s*(?:and\s+)?|\s+and\s+)')
+COMMENT_RE = re.compile(r'^(\w+)>\s+(.*)$')
 
 # Based on load_cve() in scripts/cve_lib.py
 def load_cve(cve, strict=False):
@@ -204,7 +205,21 @@ def load_ubuntu_issue(f):
     if refs:
         issue['references'] = refs
 
-    # TODO: comments
+    comments = {}
+    name = 'Ubuntu'
+    for line in ubu_issue['Notes'].split('\n'):
+        if not line:
+            continue
+        match = COMMENT_RE.match(line)
+        if match:
+            name = 'Ubuntu-' + match.group(1)
+            rest = match.group(2)
+        else:
+            rest = line
+        comments.setdefault(name, []).append(rest)
+    if comments:
+        issue['comments'] = dict((name, '\n'.join(lines))
+                                 for (name, lines) in comments.items())
 
     disc = ubu_issue.get('Discovered-by', '').strip()
     if disc:
