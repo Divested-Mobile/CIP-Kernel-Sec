@@ -18,12 +18,14 @@ introduced-by:
   # List multiple commits if the issue results from the combination of
   # several otherwise harmless changes, or if the CVE covers several
   # similar bugs introduced by multiple commits.
+  # Put 'never' if issue does not exist on mainline.
   other-branch: [123456789abcdef0123456789abcdef012345678]
   # List any other branches where the vulnerability was introduced by
   # a backport.
 fixed-by:
   mainline: [23456789abcdef0123456789abcdef0123456789]
   # List all commits that were made in response to this specific issue.
+  # Put 'never' if issue has not yet been fixed.
   other-branch: [3456789abcdef0123456789abcdef01234567890]
   # List all commits that are backports of the fix.
 fix-depends-on:

@@ -42,6 +42,8 @@ def _validate_mapping_string(name, value):
 def _validate_mapping_sequence_hash(name, value):
     if type(value) is dict:
         for seq in value.values():
+            if seq == 'never':
+                continue
             if type(seq) is not list:
                 break
             for entry in seq:
@@ -113,6 +115,8 @@ def merge_into(ours, theirs):
             our_dict = ours.setdefault(field_name, {})
             for branch, hashes in theirs[field_name].items():
                 our_hashes = our_dict.setdefault(branch, [])
+                if our_hashes == 'never':
+                    continue
                 for h in hashes:
                     if h not in our_hashes:
                         our_hashes.append(h)

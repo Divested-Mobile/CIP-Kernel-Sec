@@ -66,22 +66,25 @@ def main(git_repo='../kernel', mainline_remote_name='torvalds',
             # If it was not introduced on this branch, and was introduced on
             # mainline after the branch point, branch is not affected
             introduced = issue.get('introduced-by')
-            if introduced and branch not in introduced \
-               and 'mainline' in introduced:
-                for commit in introduced['mainline']:
-                    if commit in commit_sort_key \
-                       and commit_sort_key[commit] <= branch_sort_key[branch]:
-                        break
-                else:
+            if introduced:
+                if introduced.get('mainline') == 'never' and \
+                   (branch == 'mainline' or branch not in introduced):
                     continue
+                if branch not in introduced:
+                    for commit in introduced['mainline']:
+                        if commit in commit_sort_key \
+                           and commit_sort_key[commit] <= branch_sort_key[branch]:
+                            break
+                    else:
+                        continue
 
             # If it was fixed on this branch, or fixed on mainline before
             # the branch point, branch is not affected
             fixed = issue.get('fixed-by')
             if fixed:
-                if branch in fixed:
+                if fixed.get(branch, 'never') != 'never':
                     continue
-                if 'mainline' in fixed:
+                if fixed.get('mainline', 'never') != 'never':
                     for commit in fixed['mainline']:
                         if commit not in commit_sort_key \
                            or commit_sort_key[commit] > branch_sort_key[branch]:
