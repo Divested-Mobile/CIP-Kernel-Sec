@@ -3,6 +3,7 @@
 # Report issues affecting each stable branch.
 
 import io
+import re
 import subprocess
 import sys
 
@@ -18,6 +19,10 @@ def get_commits(git_repo, end, start=None):
                                  cwd=git_repo, stdout=subprocess.PIPE)
     for line in io.TextIOWrapper(list_proc.stdout):
         yield line.rstrip('\n')
+
+# Pad last part of CVE ID to 6 digits so string comparison keeps working
+def pad_cve_id(cve_id):
+    return re.sub(r'-(\d+)$', lambda m: '-%06d' % int(m.group(1)), cve_id)
 
 def main(git_repo='../kernel', mainline_remote_name='torvalds',
          stable_remote_name='stable', *branch_names):
@@ -41,11 +46,12 @@ def main(git_repo='../kernel', mainline_remote_name='torvalds',
             assert base_ver is not None
             branch_sort_key[branch] = kernel_sec.version.get_sort_key(base_ver)
 
+    branch_names.sort(key=(lambda branch: branch_sort_key[branch]))
+
     # Generate sort key for each commit
     commit_sort_key = {}
     start = None
-    for branch in sorted(branch_names,
-                         key=(lambda branch: branch_sort_key[branch])):
+    for branch in branch_names:
         if branch == 'mainline':
             end = '%s/master' % mainline_remote_name
         else:
@@ -95,7 +101,7 @@ def main(git_repo='../kernel', mainline_remote_name='torvalds',
             branch_issues.setdefault(branch, []).append(cve_id)
 
     for branch in branch_names:
-        print('%s: %s' % (branch, ' '.join(branch_issues.get(branch, []))))
+        print('%s:' % branch, *sorted(branch_issues.get(branch, []), key=pad_cve_id))
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
