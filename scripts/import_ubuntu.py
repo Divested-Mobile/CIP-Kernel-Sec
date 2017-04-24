@@ -206,8 +206,10 @@ def load_ubuntu_issue(f):
 
     issue['description'] = ubu_issue['Description'].strip()
 
-    refs = ubu_issue.get('References', '').strip().split() + \
-           ubu_issue.get('Bugs', '').strip().split()
+    refs = [ref for ref in
+            (ubu_issue.get('References', '').strip().split() +
+             ubu_issue.get('Bugs', '').strip().split())
+            if ':' in ref]
     if refs:
         issue['references'] = refs
 
