@@ -140,6 +140,11 @@ def merge_into(ours, theirs):
     return changed
 
 class _IssueDumper(yaml.dumper.SafeDumper):
+    # Write strings as UTF-8, not ASCII with escapes
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.allow_unicode = True
+
     def represent(self, data):
         self.__root = data
         try:
