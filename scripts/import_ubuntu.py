@@ -228,9 +228,9 @@ def load_ubuntu_issue(f):
     patches = ubu_issue.get('Patches_linux', '').strip()
     match = BREAK_FIX_RE.match(patches)
     if match and match.group(1):
-        issue.setdefault('introduced-by', {})['master'] = [match.group(1)]
+        issue.setdefault('introduced-by', {})['mainline'] = [match.group(1)]
     if match and match.group(2):
-        issue.setdefault('fixed-by', {})['master'] = [match.group(2)]
+        issue.setdefault('fixed-by', {})['mainline'] = [match.group(2)]
 
     return issue
 
