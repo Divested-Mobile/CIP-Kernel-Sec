@@ -20,6 +20,7 @@ BREAK_FIX_RE = re.compile(r'^break-fix: (?:([0-9a-f]{40})|[-\w]+)'
                           r' (?:([0-9a-f]{40})|[-\w]+)$')
 DISCOVERED_BY_SEP_RE = re.compile(r'(?:,\s*(?:and\s+)?|\s+and\s+)')
 COMMENT_RE = re.compile(r'^(\w+)>\s+(.*)$')
+DESCRIPTION_ANDROID_RE = re.compile(r'\bAndroid\b')
 
 # Based on load_cve() in scripts/cve_lib.py
 def load_cve(cve, strict=False):
@@ -196,6 +197,11 @@ def load_ubuntu_issue(f):
     assert ubu_issue['Candidate'] == os.path.basename(f.name)
 
     if 'linux' not in ubu_issue['pkgs']:
+        raise NonKernelIssue()
+
+    # Issues with Android in the description almost always refer to things
+    # not in mainline, that we should not track
+    if DESCRIPTION_ANDROID_RE.search(ubu_issue['Description']):
         raise NonKernelIssue()
 
     issue['description'] = ubu_issue['Description'].strip()
