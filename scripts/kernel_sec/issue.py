@@ -103,6 +103,7 @@ def merge_into(ours, theirs):
     changed = False
 
     def merge_list(field_name):
+        nonlocal changed
         if field_name in theirs:
             our_list = ours.setdefault(field_name, [])
             for item in theirs[field_name]:
@@ -111,6 +112,7 @@ def merge_into(ours, theirs):
                     changed = True
 
     def merge_commit_lists(field_name):
+        nonlocal changed
         if field_name in theirs:
             our_dict = ours.setdefault(field_name, {})
             for branch, hashes in theirs[field_name].items():
