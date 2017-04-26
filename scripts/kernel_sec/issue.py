@@ -1,3 +1,10 @@
+# Copyright 2006 Kirill Simonov <xi@resolvent.net>
+# Copyright 2017 Codethink Ltd.
+#
+# This script is distributed under the terms and conditions of the GNU General
+# Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
+# for details.
+
 import datetime
 import glob
 import os.path

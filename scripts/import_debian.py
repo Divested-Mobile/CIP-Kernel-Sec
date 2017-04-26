@@ -1,5 +1,11 @@
 #!/usr/bin/python3
 
+# Copyright 2017 Codethink Ltd.
+#
+# This script is distributed under the terms and conditions of the GNU General
+# Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
+# for details.
+
 # Import information from Debian's kernel-sec repository.  The format is
 # not documented but is based on Debian's variant of RFC822. See
 # active/00boilerplate and scripts/filter-active.py in that repository.

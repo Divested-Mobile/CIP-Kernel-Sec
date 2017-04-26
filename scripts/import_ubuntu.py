@@ -1,5 +1,12 @@
 #!/usr/bin/python3
 
+# Copyright 2005-2011 Canonical Ltd.
+# Copyright 2017 Codethink Ltd.
+#
+# This script is distributed under the terms and conditions of the GNU General
+# Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
+# for details.
+
 # Import information from ubuntu-cve-tracker repository.  The format is
 # roughly documented in the README file.  See also the load_cve()
 # function in scripts/cve_lib.py.
