@@ -23,6 +23,10 @@ BACKPORT_COMMIT_RE = re.compile(
     r')$'
     % ((r'[0-9a-f]{40}',) * 3))
 
+def update(git_repo, remote_name):
+    subprocess.check_call(['git', 'remote', 'update', remote_name],
+                          cwd=git_repo)
+
 def get_backports(git_repo, remote_name):
     branches = kernel_sec.branch.get_stable_branches(git_repo, remote_name)
     backports = {}
@@ -80,6 +84,7 @@ def add_backports(issue_commits, all_backports):
     return changed
 
 def main(git_repo='../kernel', remote_name='stable'):
+    update(git_repo, remote_name)
     backports = get_backports(git_repo, remote_name)
 
     issues = set(kernel_sec.issue.get_list())
