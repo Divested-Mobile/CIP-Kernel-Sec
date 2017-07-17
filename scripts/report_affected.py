@@ -8,6 +8,7 @@
 
 # Report issues affecting each stable branch.
 
+import argparse
 import io
 import re
 import subprocess
@@ -30,8 +31,7 @@ def get_commits(git_repo, end, start=None):
 def pad_cve_id(cve_id):
     return re.sub(r'-(\d+)$', lambda m: '-%06d' % int(m.group(1)), cve_id)
 
-def main(git_repo='../kernel', mainline_remote_name='torvalds',
-         stable_remote_name='stable', *branch_names):
+def main(git_repo, mainline_remote_name, stable_remote_name, *branch_names):
     if branch_names:
         # Support stable release strings as shorthand for stable branches
         branch_names = [kernel_sec.branch.get_base_ver_stable_branch(name)
@@ -110,4 +110,24 @@ def main(git_repo='../kernel', mainline_remote_name='torvalds',
         print('%s:' % branch, *sorted(branch_issues.get(branch, []), key=pad_cve_id))
 
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    parser = argparse.ArgumentParser(
+        description='Report unfixed CVEs in Linux kernel branches.')
+    parser.add_argument('--git-repo',
+                        dest='git_repo', default='../kernel',
+                        help='git repository from which to read commit logs (default: ../kernel)',
+                        metavar='DIRECTORY')
+    parser.add_argument('--mainline-remote',
+                        dest='mainline_remote_name', default='torvalds',
+                        help='git remote for mainline (default: torvalds)',
+                        metavar='NAME')
+    parser.add_argument('--stable-remote',
+                        dest='stable_remote_name', default='stable',
+                        help='git remote for stable branches (default: stable)',
+                        metavar='NAME')
+    parser.add_argument('branches',
+                        nargs='*',
+                        help='specific branch to report on (default: all active branches)',
+                        metavar='BRANCH')
+    args = parser.parse_args()
+    main(args.git_repo, args.mainline_remote_name, args.stable_remote_name,
+         *args.branches)

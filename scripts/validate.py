@@ -6,6 +6,7 @@
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
 # for details.
 
+import argparse
 import sys
 
 from kernel_sec.issue import get_filename, get_list, load, load_filename, validate
@@ -27,4 +28,11 @@ def main(*names):
     sys.exit(rc)
 
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    parser = argparse.ArgumentParser(
+        description='Validate issue files against the schema.')
+    parser.add_argument('issues',
+                        nargs='*',
+                        help='specific file to validate (default: all)',
+                        metavar='FILE')
+    args = parser.parse_args()
+    main(*args.issues)

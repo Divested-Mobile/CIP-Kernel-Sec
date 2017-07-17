@@ -9,6 +9,7 @@
 # Fill in introduced-by or fixed-by for stable branches that have
 # corresponding commits for all the mainline commits.
 
+import argparse
 import io
 import re
 import subprocess
@@ -83,7 +84,7 @@ def add_backports(issue_commits, all_backports):
 
     return changed
 
-def main(git_repo='../kernel', remote_name='stable'):
+def main(git_repo, remote_name):
     update(git_repo, remote_name)
     backports = get_backports(git_repo, remote_name)
 
@@ -102,4 +103,16 @@ def main(git_repo='../kernel', remote_name='stable'):
             kernel_sec.issue.save(cve_id, issue)
 
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    parser = argparse.ArgumentParser(
+        description=('Import information about backported fixes and regressions '
+                     'from commit messages on stable branches.'))
+    parser.add_argument('--git-repo',
+                        dest='git_repo', default='../kernel',
+                        help='git repository from which to read commit logs (default: ../kernel)',
+                        metavar='DIRECTORY')
+    parser.add_argument('--stable-remote',
+                        dest='stable_remote_name', default='stable',
+                        help='git remote for stable branches (default: stable)',
+                        metavar='NAME')
+    args = parser.parse_args()
+    main(args.git_repo, args.stable_remote_name)
