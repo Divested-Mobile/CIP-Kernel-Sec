@@ -124,12 +124,12 @@ def merge_into(ours, theirs):
             our_dict = ours.setdefault(field_name, {})
             for branch, hashes in theirs[field_name].items():
                 our_hashes = our_dict.setdefault(branch, [])
-                if our_hashes == 'never':
-                    continue
-                for h in hashes:
-                    if h not in our_hashes:
-                        our_hashes.append(h)
-                        changed = True
+                # Only update if they agree with what we already have
+                if our_hashes != 'never' and set(hashes) > set(our_hashes):
+                    for h in hashes:
+                        if h not in our_hashes:
+                            our_hashes.append(h)
+                            changed = True
 
     # Don't attempt to merge description.  As it is a mandatory field
     # we must already have a description.
