@@ -31,7 +31,8 @@ def get_commits(git_repo, end, start=None):
 def pad_cve_id(cve_id):
     return re.sub(r'-(\d+)$', lambda m: '-%06d' % int(m.group(1)), cve_id)
 
-def main(git_repo, mainline_remote_name, stable_remote_name, *branch_names):
+def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream,
+         *branch_names):
     if branch_names:
         # Support stable release strings as shorthand for stable branches
         branch_names = [kernel_sec.branch.get_base_ver_stable_branch(name)
@@ -39,8 +40,9 @@ def main(git_repo, mainline_remote_name, stable_remote_name, *branch_names):
                         for name in branch_names]
     else:
         branch_names = kernel_sec.branch.get_live_stable_branches(
-                           git_repo, stable_remote_name) \
-                       + ['mainline']
+                           git_repo, stable_remote_name)
+        if not only_fixed_upstream:
+            branch_names.append('mainline')
 
     # Generate sort key for each branch
     branch_sort_key = {}
@@ -90,9 +92,13 @@ def main(git_repo, mainline_remote_name, stable_remote_name, *branch_names):
                     else:
                         continue
 
+            fixed = issue.get('fixed-by', {})
+
+            if only_fixed_upstream and fixed.get('mainline', 'never') == 'never':
+                continue
+
             # If it was fixed on this branch, or fixed on mainline before
             # the branch point, branch is not affected
-            fixed = issue.get('fixed-by')
             if fixed:
                 if fixed.get(branch, 'never') != 'never':
                     continue
@@ -124,10 +130,13 @@ if __name__ == '__main__':
                         dest='stable_remote_name', default='stable',
                         help='git remote for stable branches (default: stable)',
                         metavar='NAME')
+    parser.add_argument('--only-fixed-upstream',
+                        action='store_true',
+                        help='only report issues fixed in mainline')
     parser.add_argument('branches',
                         nargs='*',
                         help='specific branch to report on (default: all active branches)',
                         metavar='BRANCH')
     args = parser.parse_args()
     main(args.git_repo, args.mainline_remote_name, args.stable_remote_name,
-         *args.branches)
+         args.only_fixed_upstream, *args.branches)
