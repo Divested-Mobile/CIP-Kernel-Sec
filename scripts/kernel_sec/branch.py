@@ -50,11 +50,12 @@ def get_live_stable_branches(*args, **kwargs):
         'linux-2.6.31.y', 'linux-2.6.32.y', 'linux-2.6.33.y', 'linux-2.6.34.y',
         'linux-2.6.35.y', 'linux-2.6.36.y', 'linux-2.6.37.y', 'linux-2.6.38.y',
         'linux-2.6.39.y', 'linux-3.0.y', 'linux-3.1.y', 'linux-3.3.y',
-        'linux-3.5.y', 'linux-3.6.y', 'linux-3.7.y', 'linux-3.8.y',
-        'linux-3.9.y', 'linux-3.11.y', 'linux-3.12.y', 'linux-3.13.y',
-        'linux-3.14.y', 'linux-3.15.y', 'linux-3.17.y', 'linux-3.19.y',
-        'linux-4.0.y', 'linux-4.2.y', 'linux-4.3.y', 'linux-4.5.y',
-        'linux-4.6.y', 'linux-4.7.y', 'linux-4.8.y', 'linux-4.10.y'))
+        'linux-3.4.y', 'linux-3.5.y', 'linux-3.6.y', 'linux-3.7.y',
+        'linux-3.8.y', 'linux-3.9.y', 'linux-3.10.y', 'linux-3.11.y',
+        'linux-3.12.y', 'linux-3.13.y', 'linux-3.14.y', 'linux-3.15.y',
+        'linux-3.17.y', 'linux-3.19.y', 'linux-4.0.y', 'linux-4.2.y',
+        'linux-4.3.y', 'linux-4.5.y', 'linux-4.6.y', 'linux-4.7.y',
+        'linux-4.8.y', 'linux-4.10.y', 'linux-4.11.y', 'linux-4.12.y'))
 
     return [branch_name for branch_name in get_stable_branches(*args, **kwargs)
             if branch_name not in dead_branches]
