@@ -151,6 +151,14 @@ def merge_into(ours, theirs):
     merge_commit_lists('introduced-by')
     merge_commit_lists('fixed-by')
 
+    if 'ignore' in theirs:
+        our_ignore = ours.setdefault('ignore', {})
+        if 'all' not in our_ignore:
+            for name, reason in theirs['ignore'].items():
+                if name not in our_ignore:
+                    our_ignore[name] = reason
+                    changed = True
+
     return changed
 
 class _IssueDumper(yaml.dumper.SafeDumper):
