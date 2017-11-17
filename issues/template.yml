@@ -32,6 +32,12 @@ fix-depends-on:
   456789abcdef0123456789abcdef012345678901: |
     Explanation of why the fix in mainline depends on this commit, and
     whether this dependency can be avoided when backporting.
+ignore:
+  some-branch: |
+    Explanation of why this issue can be ignored (by default) on a
+    given branch.
+  all: |
+    Explanation of why this issue can be ignored (by default) in general.
 tests: [test-program]
 # List all related test programs under ../tests/.  For compiled programs,
 # give the executable name.

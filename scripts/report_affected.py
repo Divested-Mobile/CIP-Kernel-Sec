@@ -32,7 +32,7 @@ def pad_cve_id(cve_id):
     return re.sub(r'-(\d+)$', lambda m: '-%06d' % int(m.group(1)), cve_id)
 
 def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream,
-         *branch_names):
+         include_ignored, *branch_names):
     if branch_names:
         # Support stable release strings as shorthand for stable branches
         branch_names = [kernel_sec.branch.get_base_ver_stable_branch(name)
@@ -92,6 +92,12 @@ def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream
                     else:
                         continue
 
+            # Check whether it is ignored on this branch, unless we're
+            # overriding that
+            ignore = issue.get('ignore', {})
+            if not include_ignored and (ignore.get('all') or ignore.get(branch)):
+                continue
+
             fixed = issue.get('fixed-by', {})
 
             if only_fixed_upstream and fixed.get('mainline', 'never') == 'never':
@@ -133,10 +139,13 @@ if __name__ == '__main__':
     parser.add_argument('--only-fixed-upstream',
                         action='store_true',
                         help='only report issues fixed in mainline')
+    parser.add_argument('--include-ignored',
+                        action='store_true',
+                        help='include issues that have been marked as ignored')
     parser.add_argument('branches',
                         nargs='*',
                         help='specific branch to report on (default: all active branches)',
                         metavar='BRANCH')
     args = parser.parse_args()
     main(args.git_repo, args.mainline_remote_name, args.stable_remote_name,
-         args.only_fixed_upstream, *args.branches)
+         args.only_fixed_upstream, args.include_ignored, *args.branches)

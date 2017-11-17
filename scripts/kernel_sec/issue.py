@@ -87,6 +87,7 @@ _ALL_FIELDS = [
     ('introduced-by',   _validate_mapping_sequence_hash),
     ('fixed-by',        _validate_mapping_sequence_hash),
     ('fix-depends-on',  _validate_hashmapping_string),
+    ('ignore',          _validate_mapping_string),
     ('tests',           _validate_sequence_string)
 ]
 _FIELD_VALIDATOR = dict(_ALL_FIELDS)
