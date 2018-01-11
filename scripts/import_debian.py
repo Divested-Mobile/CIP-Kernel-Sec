@@ -14,6 +14,7 @@ from debian import deb822
 import glob
 import os.path
 import re
+import shutil
 import subprocess
 import sys
 
@@ -86,14 +87,17 @@ def load_debian_issue(f):
     return issue
 
 def main():
-    os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
+    # Remove obsolete Subversion working directory
     if os.path.isdir(IMPORT_DIR + '/.svn'):
-        subprocess.check_call(['svn', 'update'], cwd=IMPORT_DIR)
+        shutil.rmtree(IMPORT_DIR)
+
+    # Create/update Git repository
+    os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
+    if os.path.isdir(IMPORT_DIR + '/.git'):
+        subprocess.check_call(['git', 'pull'], cwd=IMPORT_DIR)
     else:
-        # XXX This is not secure; does Alioth support HTTP-S access to
-        # Subversion repos?
-        subprocess.check_call(['svn', 'checkout',
-                               'svn://scm.alioth.debian.org/svn/kernel-sec/',
+        subprocess.check_call(['git', 'clone',
+                               'https://salsa.debian.org/kernel-team/kernel-sec.git',
                                '.'],
                               cwd=IMPORT_DIR)
 
