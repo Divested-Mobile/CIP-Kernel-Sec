@@ -55,7 +55,8 @@ def get_live_stable_branches(*args, **kwargs):
         'linux-3.12.y', 'linux-3.13.y', 'linux-3.14.y', 'linux-3.15.y',
         'linux-3.17.y', 'linux-3.19.y', 'linux-4.0.y', 'linux-4.2.y',
         'linux-4.3.y', 'linux-4.5.y', 'linux-4.6.y', 'linux-4.7.y',
-        'linux-4.8.y', 'linux-4.10.y', 'linux-4.11.y', 'linux-4.12.y'))
+        'linux-4.8.y', 'linux-4.10.y', 'linux-4.11.y', 'linux-4.12.y',
+        'linux-4.13.y'))
 
     return [branch_name for branch_name in get_stable_branches(*args, **kwargs)
             if branch_name not in dead_branches]
