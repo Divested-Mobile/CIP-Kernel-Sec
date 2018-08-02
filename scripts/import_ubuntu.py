@@ -261,10 +261,12 @@ def get_recent_issues():
 
 def main():
     os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
-    if os.path.isdir(IMPORT_DIR + '/.bzr'):
-        subprocess.check_call(['bzr', 'update'], cwd=IMPORT_DIR)
+    if os.path.isdir(IMPORT_DIR + '/.git'):
+        subprocess.check_call(['git', 'pull'], cwd=IMPORT_DIR)
     else:
-        subprocess.check_call(['bzr', 'checkout', 'lp:ubuntu-cve-tracker', '.'],
+        subprocess.check_call(['git', 'clone',
+                               'https://git.launchpad.net/ubuntu-cve-tracker',
+                               '.'],
                               cwd=IMPORT_DIR)
 
     our_issues = set(kernel_sec.issue.get_list())
