@@ -35,6 +35,10 @@ specified branches, or all active branches.
 * `scripts/validate.py` - validate all issue files against the
 schema.
 
+* `scripts/cleanup.py` - canonicalise formatting of all issue
+files.  This should be run after hand-editing files to reduce
+"noise" in later automated updates.
+
 ## Contributions
 
 If you have better information about any issue, or additional
