@@ -1,0 +1,104 @@
+<title>{{ cve_id }} - {{ issue.description|truncate(50) }}</title>
+<h1>{{ cve_id }} - {{ issue.description|truncate(50) }}</h1>
+<h2>Summary</h2>
+<p>{{ issue.description }}</p>
+{% if issue.advisory %}
+<h2>Advisory</h2>
+<p>{{ issue.advisory }}</p>
+{% endif %}
+<table>
+  {% if issue.references %}
+  <tr>
+    <th>References</th>
+    <td>
+      {% for url in issue.references %}
+      <a href="{{ url }}">{{ url }}</a>
+      {% if not loop.last %}|{% endif %}
+      {% endfor %}
+    </td>
+  </tr>
+  {% endif %}
+  {% if issue.aliases %}
+  <tr>
+    <th>Aliases</th>
+    <td>
+      {% for alias in issue.aliases %}
+      {{ alias }}{% if not loop.last %},{% endif %}  
+      {% endfor %}
+    </td>
+  </tr>
+  {% endif %}
+  {% if issue.comments %}
+  <tr>
+    <th>Comments</th>
+    <td>
+      {% for handle in issue.comments %}
+      {{ handle }}: <q>{{ issue.comments[handle] }}</q>
+      {% if not loop.last %}<br/>{% endif %}
+      {% endfor %}
+    </td>
+  </tr>
+  {% endif %}
+  {% if issue.reporters %}
+  <tr>
+    <th>Reporters</th>
+    <td>
+      {% for rep in issue.reporters %}
+      {# This may include an email address which could be linked #}
+      {{ rep }}{% if not loop.last %},{% endif %}
+      {% endfor %}
+    </td>
+  </tr>
+  {% endif %}
+  {% if issue['embargo-end'] %}
+  <tr>
+    <th>Embargo</th>
+    <td>
+      {# TODO: If embargo-end is in the future we should prominently
+      flag this issue as embargoed #}
+      {{ issue['embargo-end'] }}
+    </td>
+  </tr>
+  {% endif %}
+  {% if issue['introduced-by'] %}
+  <tr>
+    <th>Introduced by</th>
+    <td>
+      {% for branch in issue['introduced-by'] %}
+      {{ branch }}:
+      {% for commit in issue['introduced-by'][branch] %}
+      <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
+      {% endfor %}
+      {% if not loop.last %}<br/>{% endif %}
+      {% endfor %}
+    </td>
+  </tr>
+  {% endif %}
+  {% if issue['fixed-by'] %}
+  <tr>
+    <th>Fixed by</th>
+    <td>
+      {% for branch in issue['fixed-by'] %}
+      {{ branch }}:
+      {% for commit in issue['fixed-by'][branch] %}
+      <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
+      {% endfor %}
+      {% if not loop.last %}<br/>{% endif %}
+      {% endfor %}
+    </td>
+  </tr>
+  {% endif %}
+  {% if issue['fix-depends-on'] %}
+  <tr>
+    <th>Fix depends on</th>
+    <td>
+      {% for commit in issue['fix-depends-on'] %}
+      <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>
+      ({{ issue['fix-depends-on'][commit] }})
+      {% if not loop.last %}<br/>{% endif %}
+      {% endfor %}
+    </td>
+  </tr>
+  {% endif %}
+</table>
+{# TODO: show issue status for each branch #}

@@ -39,6 +39,10 @@ schema.
 files.  This should be run after hand-editing files to reduce
 "noise" in later automated updates.
 
+* `scripts/webview.py` - run a local web server that allows browsing
+branches and issues.  This requires CherryPy and Jinja2 (packaged
+in Debian as python3-cherrypy3 and python3-jinja2).
+
 ## Contributions
 
 If you have better information about any issue, or additional

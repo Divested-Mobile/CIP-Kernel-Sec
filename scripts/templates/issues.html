@@ -1,0 +1,7 @@
+<title>Issues</title>
+<h1>Issues</h1>
+<ul>
+  {% for cve_id in cve_ids %}
+  <li><a href="{{ cve_id }}/">{{ cve_id }}</a></li>
+  {% endfor %}
+</ul>

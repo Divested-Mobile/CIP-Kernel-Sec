@@ -1,0 +1,10 @@
+<title>Branches</title>
+<h1>Branches</h1>
+<p>
+  Only the currently maintained branches are shown.
+</p>
+<ul>
+  {% for name in names %}
+  <li><a href="{{ name }}/">{{ name }}</a></li>
+  {% endfor %}
+</ul>
