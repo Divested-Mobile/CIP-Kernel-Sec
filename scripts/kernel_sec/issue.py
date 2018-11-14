@@ -265,3 +265,10 @@ def load(cve_id):
 
 def save(cve_id, issue):
     save_filename(get_filename(cve_id), issue)
+
+# Match the "arbitrary digits" after the year
+_cve_id_arbdig_re = re.compile(r'-(\d+)$')
+
+# Pad "arbitrary digits" to 6 digits so string comparison works
+def get_id_sort_key(cve_id):
+    return _cve_id_arbdig_re.sub(lambda m: '-%06d' % int(m.group(1)), cve_id)

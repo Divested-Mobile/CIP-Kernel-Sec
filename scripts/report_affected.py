@@ -27,10 +27,6 @@ def get_commits(git_repo, end, start=None):
     for line in io.TextIOWrapper(list_proc.stdout):
         yield line.rstrip('\n')
 
-# Pad last part of CVE ID to 6 digits so string comparison keeps working
-def pad_cve_id(cve_id):
-    return re.sub(r'-(\d+)$', lambda m: '-%06d' % int(m.group(1)), cve_id)
-
 def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream,
          include_ignored, *branch_names):
     if branch_names:
@@ -119,7 +115,8 @@ def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream
             branch_issues.setdefault(branch, []).append(cve_id)
 
     for branch in branch_names:
-        print('%s:' % branch, *sorted(branch_issues.get(branch, []), key=pad_cve_id))
+        print('%s:' % branch, *sorted(branch_issues.get(branch, []),
+                                      key=kernel_sec.issue.get_id_sort_key))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
