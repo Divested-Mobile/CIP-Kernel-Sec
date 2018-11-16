@@ -21,6 +21,7 @@ import sys
 
 import kernel_sec.issue
 
+
 IMPORT_DIR = 'import/ubuntu'
 
 BREAK_FIX_RE = re.compile(r'^break-fix: (?:([0-9a-f]{40})|[-\w]+)'
@@ -28,6 +29,7 @@ BREAK_FIX_RE = re.compile(r'^break-fix: (?:([0-9a-f]{40})|[-\w]+)'
 DISCOVERED_BY_SEP_RE = re.compile(r'(?:,\s*(?:and\s+)?|\s+and\s+)')
 COMMENT_RE = re.compile(r'^(\w+)>\s+(.*)$')
 DESCRIPTION_ANDROID_RE = re.compile(r'\bAndroid\b')
+
 
 # Based on load_cve() in scripts/cve_lib.py
 def load_cve(cve, strict=False):
@@ -44,7 +46,7 @@ def load_cve(cve, strict=False):
     code = EXIT_OKAY
 
     data = dict()
-    data.setdefault('tags',dict())
+    data.setdefault('tags', dict())
     affected = dict()
     lastfield = None
     fields_seen = []
@@ -64,7 +66,7 @@ def load_cve(cve, strict=False):
             continue
 
         try:
-            field, value = line.split(':',1)
+            field, value = line.split(':', 1)
         except ValueError as e:
             msg += "%s: bad line '%s' (%s)\n" % (cve, line, e)
             code = EXIT_FAIL
@@ -78,9 +80,11 @@ def load_cve(cve, strict=False):
             fields_seen.append(field)
         value = value.strip()
         if field == 'Candidate':
-            data.setdefault(field,value)
-            if value != "" and not value.startswith('CVE-') and not value.startswith('UEM-') and not value.startswith('EMB-'):
-                msg += "%s: unknown Candidate '%s' (must be /(CVE|UEM|EMB)-/)\n" % (cve, value)
+            data.setdefault(field, value)
+            if value != "" and not value.startswith('CVE-') and \
+               not value.startswith('UEM-') and not value.startswith('EMB-'):
+                msg += ("%s: unknown Candidate '%s' (must be "
+                        "/(CVE|UEM|EMB)-/)\n" % (cve, value))
                 code = EXIT_FAIL
         elif 'Priority' in field:
             # For now, throw away comments on Priority fields
@@ -88,25 +92,26 @@ def load_cve(cve, strict=False):
                 value = value.split()[0]
             if 'Priority_' in field:
                 try:
-                    foo, pkg = field.split('_',1)
+                    foo, pkg = field.split('_', 1)
                 except ValueError:
-                    msg += "%s: bad field with 'Priority_': '%s'\n" % (cve, field)
+                    msg += ("%s: bad field with 'Priority_': '%s'\n" %
+                            (cve, field))
                     code = EXIT_FAIL
                     continue
-            data.setdefault(field,value)
+            data.setdefault(field, value)
         elif 'Patches_' in field:
             '''These are raw fields'''
             try:
-                foo, pkg = field.split('_',1)
+                foo, pkg = field.split('_', 1)
             except ValueError:
                 msg += "%s: bad field with 'Patches_': '%s'\n" % (cve, field)
                 code = EXIT_FAIL
                 continue
-            data.setdefault(field,value)
+            data.setdefault(field, value)
         elif 'Tags_' in field:
             '''These are processed into the "tags" hash'''
             try:
-                foo, pkg = field.split('_',1)
+                foo, pkg = field.split('_', 1)
             except ValueError:
                 msg += "%s: bad field with 'Tags_': '%s'\n" % (cve, field)
                 code = EXIT_FAIL
@@ -116,15 +121,16 @@ def load_cve(cve, strict=False):
                 data['tags'][pkg].add(word)
         elif '_' in field:
             try:
-                release, pkg = field.split('_',1)
+                release, pkg = field.split('_', 1)
             except ValueError:
                 msg += "%s: bad field with '_': '%s'\n" % (cve, field)
                 code = EXIT_FAIL
                 continue
             try:
-                info = value.split(' ',1)
+                info = value.split(' ', 1)
             except ValueError:
-                msg += "%s: missing state for '%s': '%s'\n" % (cve, field, value)
+                msg += ("%s: missing state for '%s': '%s'\n" %
+                        (cve, field, value))
                 code = EXIT_FAIL
                 continue
             state = info[0]
@@ -145,30 +151,32 @@ def load_cve(cve, strict=False):
                 notes = state
                 state = 'released'
 
-            if state not in ['needs-triage','needed','active','pending','released','deferred','DNE','ignored','not-affected']:
-                msg += "%s: %s_%s has unknown state: '%s'\n" % (cve, release, pkg, state)
+            if state not in ['needs-triage', 'needed', 'active', 'pending',
+                             'released', 'deferred', 'DNE', 'ignored',
+                             'not-affected']:
+                msg += ("%s: %s_%s has unknown state: '%s'\n" %
+                        (cve, release, pkg, state))
                 code = EXIT_FAIL
-
-            # Verify "released" kernels have version notes
-            #if state == 'released' and pkg in kernel_srcs and notes == '':
-            #    msg += "%s: %s_%s has state '%s' but lacks version note\n" % (cve, release, pkg, state)
-            #    code = EXIT_FAIL
 
             # Verify "active" states have an Assignee
             if state == 'active' and data['Assigned-to'].strip() == "":
-                msg += "%s: %s_%s has state '%s' but lacks 'Assigned-to'\n" % (cve, release, pkg, state)
+                msg += ("%s: %s_%s has state '%s' but lacks 'Assigned-to'\n" %
+                        (cve, release, pkg, state))
                 code = EXIT_FAIL
 
-            affected.setdefault(pkg,dict())
-            affected[pkg].setdefault(release,[state,notes])
-        elif field not in ['References', 'Description', 'Ubuntu-Description', 'Notes', 'Bugs', 'Assigned-to', 'Approved-by', 'PublicDate', 'PublicDateAtUSN', 'CRD', 'Discovered-by']:
+            affected.setdefault(pkg, dict())
+            affected[pkg].setdefault(release, [state, notes])
+        elif field not in ['References', 'Description', 'Ubuntu-Description',
+                           'Notes', 'Bugs', 'Assigned-to', 'Approved-by',
+                           'PublicDate', 'PublicDateAtUSN', 'CRD',
+                           'Discovered-by']:
             msg += "%s: unknown field '%s'\n" % (cve, field)
             code = EXIT_FAIL
         else:
-            data.setdefault(field,value)
+            data.setdefault(field, value)
 
     # Check for required fields
-    for field in ['Candidate','PublicDate','Description']:
+    for field in ['Candidate', 'PublicDate', 'Description']:
         if field not in data:
             msg += "%s: missing field '%s'\n" % (cve, field)
             code = EXIT_FAIL
@@ -181,7 +189,7 @@ def load_cve(cve, strict=False):
 
     # Fill in defaults for missing fields
     if 'Priority' not in data:
-        data.setdefault('Priority','untriaged')
+        data.setdefault('Priority', 'untriaged')
     # Perform override fields
     if 'PublicDateAtUSN' in data:
         data['PublicDate'] = data['PublicDateAtUSN']
@@ -194,8 +202,10 @@ def load_cve(cve, strict=False):
         raise ValueError(msg.strip())
     return data
 
+
 class NonKernelIssue(Exception):
     pass
+
 
 def load_ubuntu_issue(f):
     ubu_issue = load_cve(f)
@@ -249,6 +259,7 @@ def load_ubuntu_issue(f):
 
     return issue
 
+
 # Ubuntu doesn't seem to retire issues any more, so only include issues
 # that are active and discovered either this year or last year
 def get_recent_issues():
@@ -259,13 +270,15 @@ def get_recent_issues():
         if year >= this_year - 1:
             yield (cve_id, filename)
 
+
 def main():
     os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
     if os.path.isdir(IMPORT_DIR + '/.bzr'):
         subprocess.check_call(['bzr', 'update'], cwd=IMPORT_DIR)
     else:
-        subprocess.check_call(['bzr', 'checkout', 'lp:ubuntu-cve-tracker', '.'],
-                              cwd=IMPORT_DIR)
+        subprocess.check_call(
+            ['bzr', 'checkout', 'lp:ubuntu-cve-tracker', '.'],
+            cwd=IMPORT_DIR)
 
     our_issues = set(kernel_sec.issue.get_list())
     their_issues = dict(get_recent_issues())
@@ -293,9 +306,9 @@ def main():
             # Copy theirs
             ours = theirs
         else:
-            # Merge into ours
+            # Check that it's good to start with, then merge into ours
             ours = kernel_sec.issue.load(cve_id)
-            kernel_sec.issue.validate(ours) # check that it's good to start with
+            kernel_sec.issue.validate(ours)
             if not kernel_sec.issue.merge_into(ours, theirs):
                 continue
 
@@ -306,6 +319,7 @@ def main():
             continue
 
         kernel_sec.issue.save(cve_id, ours)
+
 
 if __name__ == '__main__':
     main()

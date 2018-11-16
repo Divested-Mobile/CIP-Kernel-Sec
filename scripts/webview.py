@@ -12,7 +12,8 @@ import os
 import cherrypy
 import jinja2
 
-import kernel_sec.branch, kernel_sec.issue
+import kernel_sec.branch
+import kernel_sec.issue
 
 
 _template_env = jinja2.Environment(
@@ -33,7 +34,8 @@ class IssueCache:
         return cache_data
 
     def _refresh_keys(self):
-        return self._refresh('issues', lambda: set(kernel_sec.issue.get_list()))
+        return self._refresh('issues',
+                             lambda: set(kernel_sec.issue.get_list()))
 
     def _refresh_issue(self, cve_id):
         filename = kernel_sec.issue.get_filename(cve_id)
@@ -138,7 +140,8 @@ if __name__ == '__main__':
         description='Report unfixed CVEs in Linux kernel branches.')
     parser.add_argument('--git-repo',
                         dest='git_repo', default='../kernel',
-                        help='git repository from which to read commit logs (default: ../kernel)',
+                        help=('git repository from which to read commit logs '
+                              '(default: ../kernel)'),
                         metavar='DIRECTORY')
     parser.add_argument('--mainline-remote',
                         dest='mainline_remote_name', default='torvalds',
@@ -146,7 +149,8 @@ if __name__ == '__main__':
                         metavar='NAME')
     parser.add_argument('--stable-remote',
                         dest='stable_remote_name', default='stable',
-                        help='git remote for stable branches (default: stable)',
+                        help=('git remote for stable branches '
+                              '(default: stable)'),
                         metavar='NAME')
     args = parser.parse_args()
     cherrypy.quickstart(Root(args.git_repo, args.mainline_remote_name,

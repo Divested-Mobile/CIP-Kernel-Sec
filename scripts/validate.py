@@ -9,7 +9,9 @@
 import argparse
 import sys
 
-from kernel_sec.issue import get_filename, get_list, load, load_filename, validate
+from kernel_sec.issue \
+    import get_filename, get_list, load, load_filename, validate
+
 
 def main(*names):
     import glob
@@ -26,6 +28,7 @@ def main(*names):
             print('%s: %s' % (name, e), file=sys.stderr)
 
     sys.exit(rc)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

@@ -13,20 +13,26 @@ import yaml
 import yaml.dumper
 import yaml.loader
 
+
 # Only SHA-1 for now
 _GIT_HASH_RE = re.compile(r'^[0-9a-f]{40}$')
+
+
 def is_git_hash(s):
     return _GIT_HASH_RE.match(s) is not None
+
 
 def _validate_string(name, value):
     if type(value) is str:
         return
     raise ValueError('%s must be a string' % name)
 
+
 def _validate_datetime(name, value):
     if type(value) is datetime.datetime:
         return
     raise ValueError('%s must be an ISO8601 date and time' % name)
+
 
 def _validate_sequence_string(name, value):
     if type(value) is list:
@@ -37,6 +43,7 @@ def _validate_sequence_string(name, value):
             return
     raise ValueError('%s must be a sequence of strings' % name)
 
+
 def _validate_mapping_string(name, value):
     if type(value) is dict:
         for v in value.values():
@@ -45,6 +52,7 @@ def _validate_mapping_string(name, value):
         else:
             return
     raise ValueError('%s must be a mapping to strings' % name)
+
 
 def _validate_mapping_sequence_hash(name, value):
     if type(value) is dict:
@@ -55,14 +63,15 @@ def _validate_mapping_sequence_hash(name, value):
                 break
             for entry in seq:
                 if type(entry) is not str or not is_git_hash(entry):
-                    break # to outer break
+                    break  # to outer break
             else:
                 continue
-            break # to top level
+            break  # to top level
         else:
             return
     raise ValueError('%s must be a mapping to sequences of git hashes' %
                      name)
+
 
 def _validate_hashmapping_string(name, value):
     if type(value) is dict:
@@ -75,6 +84,7 @@ def _validate_hashmapping_string(name, value):
             return
     raise ValueError('%s must be a mapping from git hashes to strings' %
                      name)
+
 
 _ALL_FIELDS = [
     ('description',     _validate_string),
@@ -94,6 +104,7 @@ _FIELD_VALIDATOR = dict(_ALL_FIELDS)
 _FIELD_ORDER = dict((name, i) for i, (name, _) in enumerate(_ALL_FIELDS))
 _REQUIRED_FIELDS = ['description']
 
+
 def validate(issue):
     for name in _REQUIRED_FIELDS:
         if name not in issue:
@@ -106,6 +117,7 @@ def validate(issue):
             raise ValueError('field "%s" is unknown' % name)
         else:
             validator(name, value)
+
 
 def merge_into(ours, theirs):
     changed = False
@@ -161,6 +173,7 @@ def merge_into(ours, theirs):
 
     return changed
 
+
 class _IssueDumper(yaml.dumper.SafeDumper):
     # Write strings as UTF-8, not ASCII with escapes
     def __init__(self, *args, **kwargs):
@@ -174,8 +187,8 @@ class _IssueDumper(yaml.dumper.SafeDumper):
         finally:
             del self.__root
 
-    # ISO 8601 specifies 'T' to separate date & time, but for some reason PyYAML
-    # uses ' ' by default
+    # ISO 8601 specifies 'T' to separate date & time, but for some reason
+    # PyYAML uses ' ' by default
     def represent_datetime(self, data):
         return self.represent_scalar('tag:yaml.org,2002:timestamp',
                                      data.isoformat())
@@ -205,8 +218,11 @@ class _IssueDumper(yaml.dumper.SafeDumper):
 
         return super().represent_sequence(tag, sequence, flow_style)
 
-_IssueDumper.add_representer(datetime.datetime, _IssueDumper.represent_datetime)
+
+_IssueDumper.add_representer(datetime.datetime,
+                             _IssueDumper.represent_datetime)
 _IssueDumper.add_representer(str, _IssueDumper.represent_str)
+
 
 class _IssueLoader(yaml.loader.SafeLoader):
     # Keep timezone information instead of adjusting the timestamp and then
@@ -243,31 +259,41 @@ class _IssueLoader(yaml.loader.SafeLoader):
         return datetime.datetime(year, month, day, hour, minute, second,
                                  fraction, tzinfo)
 
+
 _IssueLoader.add_constructor('tag:yaml.org,2002:timestamp',
                              _IssueLoader.construct_yaml_timestamp)
+
 
 def load_filename(name):
     with open(name) as f:
         return yaml.load(f, Loader=_IssueLoader)
 
+
 def save_filename(name, issue):
     with open(name, 'w') as f:
         yaml.dump(issue, f, Dumper=_IssueDumper)
 
+
 def get_list():
-    return [os.path.basename(name)[:-4] for name in glob.glob('issues/CVE-*.yml')]
+    return [os.path.basename(name)[:-4]
+            for name in glob.glob('issues/CVE-*.yml')]
+
 
 def get_filename(cve_id):
     return 'issues/%s.yml' % cve_id
 
+
 def load(cve_id):
     return load_filename(get_filename(cve_id))
+
 
 def save(cve_id, issue):
     save_filename(get_filename(cve_id), issue)
 
+
 # Match the "arbitrary digits" after the year
 _cve_id_arbdig_re = re.compile(r'-(\d+)$')
+
 
 # Pad "arbitrary digits" to 6 digits so string comparison works
 def get_id_sort_key(cve_id):

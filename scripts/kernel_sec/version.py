@@ -6,7 +6,9 @@
 
 import re
 
+
 _RC_RE = re.compile('-rc(\d+)$')
+
 
 def _split(ver_str):
     # Split off any '-rc' part; split rest at dots; map to integers
@@ -17,6 +19,7 @@ def _split(ver_str):
     else:
         rc_n = None
     return [int(comp) for comp in ver_str.split('.')], rc_n
+
 
 def get_sort_key(ver_str):
     # Treat x -rc y as (x-1), (large), y so it sorts between x-1 stable updates

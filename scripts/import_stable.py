@@ -15,7 +15,9 @@ import re
 import subprocess
 import sys
 
-import kernel_sec.branch, kernel_sec.issue
+import kernel_sec.branch
+import kernel_sec.issue
+
 
 BACKPORT_COMMIT_RE = re.compile(
     r'^(?:' r'commit (%s) upstream\.'
@@ -24,9 +26,11 @@ BACKPORT_COMMIT_RE = re.compile(
     r')$'
     % ((r'[0-9a-f]{40}',) * 3))
 
+
 def update(git_repo, remote_name):
     subprocess.check_call(['git', 'remote', 'update', remote_name],
                           cwd=git_repo)
+
 
 def get_backports(git_repo, remote_name):
     branches = kernel_sec.branch.get_stable_branches(git_repo, remote_name)
@@ -35,7 +39,8 @@ def get_backports(git_repo, remote_name):
     for branch_name in branches:
         base_ver = kernel_sec.branch.get_stable_branch_base_ver(branch_name)
         log_proc = subprocess.Popen(
-            # Format with hash on one line, body on following lines indented by 1
+            # Format with hash on one line, body on following lines indented
+            # by 1
             ['git', 'log', '--no-notes', '--pretty=%H%n%w(0,1,1)%b',
              'v%s..%s/%s' % (base_ver, remote_name, branch_name)],
             cwd=git_repo, stdout=subprocess.PIPE)
@@ -49,10 +54,11 @@ def get_backports(git_repo, remote_name):
                 if match:
                     mainline_commit = match.group(1) or match.group(2) \
                                       or match.group(3)
-                    backports.setdefault(mainline_commit, {}) \
-                        [branch_name] = stable_commit
+                    backports.setdefault(mainline_commit, {})[branch_name] \
+                        = stable_commit
 
     return backports
+
 
 def add_backports(issue_commits, all_backports):
     try:
@@ -84,6 +90,7 @@ def add_backports(issue_commits, all_backports):
 
     return changed
 
+
 def main(git_repo, remote_name):
     update(git_repo, remote_name)
     backports = get_backports(git_repo, remote_name)
@@ -102,17 +109,20 @@ def main(git_repo, remote_name):
         if changed:
             kernel_sec.issue.save(cve_id, issue)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description=('Import information about backported fixes and regressions '
-                     'from commit messages on stable branches.'))
+        description=('Import information about backported fixes and '
+                     'regressions from commit messages on stable branches.'))
     parser.add_argument('--git-repo',
                         dest='git_repo', default='../kernel',
-                        help='git repository from which to read commit logs (default: ../kernel)',
+                        help=('git repository from which to read commit logs '
+                              '(default: ../kernel)'),
                         metavar='DIRECTORY')
     parser.add_argument('--stable-remote',
                         dest='stable_remote_name', default='stable',
-                        help='git remote for stable branches (default: stable)',
+                        help=('git remote for stable branches '
+                              '(default: stable)'),
                         metavar='NAME')
     args = parser.parse_args()
     main(args.git_repo, args.stable_remote_name)

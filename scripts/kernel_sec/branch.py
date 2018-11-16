@@ -7,14 +7,18 @@
 import re
 import subprocess
 
+
 _STABLE_BRANCH_RE = re.compile(r'^linux-([\d.]+)\.y$')
+
 
 def get_base_ver_stable_branch(base_ver):
     return 'linux-%s.y' % base_ver
 
+
 def get_stable_branch_base_ver(branch_name):
     match = _STABLE_BRANCH_RE.match(branch_name)
     return match and match.group(1)
+
 
 def get_stable_branches(git_repo, remote_name='stable'):
     branches = []
@@ -35,6 +39,7 @@ def get_stable_branches(git_repo, remote_name='stable'):
             branches.append(branch_name)
 
     return branches
+
 
 def get_live_stable_branches(*args, **kwargs):
     # TODO: Pull list of longterm branches from

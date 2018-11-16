@@ -20,6 +20,7 @@ import sys
 
 import kernel_sec.issue
 
+
 IMPORT_DIR = 'import/debian'
 
 LINE_BREAK_RE = re.compile(r'\n\s*')
@@ -29,6 +30,7 @@ STATUS_RE = re.compile(r'^\s*(?P<state>\S*)'
                        r'\s*(?:(\((\S*,\s*)*\S*\s*\))?'
                        r'\s*(\[(?P<changerefs>(\S*,\s*)*\S*)\s*\])'
                        r'|"(?P<reason>.+)")?')
+
 
 def load_debian_issue(f):
     deb_issue = deb822.Deb822(f)
@@ -86,6 +88,7 @@ def load_debian_issue(f):
 
     return issue
 
+
 def main():
     # Remove obsolete Subversion working directory
     if os.path.isdir(IMPORT_DIR + '/.svn'):
@@ -96,10 +99,10 @@ def main():
     if os.path.isdir(IMPORT_DIR + '/.git'):
         subprocess.check_call(['git', 'pull'], cwd=IMPORT_DIR)
     else:
-        subprocess.check_call(['git', 'clone',
-                               'https://salsa.debian.org/kernel-team/kernel-sec.git',
-                               '.'],
-                              cwd=IMPORT_DIR)
+        subprocess.check_call(
+            ['git', 'clone',
+             'https://salsa.debian.org/kernel-team/kernel-sec.git', '.'],
+            cwd=IMPORT_DIR)
 
     our_issues = set(kernel_sec.issue.get_list())
     their_issues = dict((os.path.basename(name), name) for name in
@@ -126,9 +129,9 @@ def main():
             # Copy theirs
             ours = theirs
         else:
-            # Merge into ours
+            # Check that it's good to start with, then merge into ours
             ours = kernel_sec.issue.load(cve_id)
-            kernel_sec.issue.validate(ours) # check that it's good to start with
+            kernel_sec.issue.validate(ours)
             if not kernel_sec.issue.merge_into(ours, theirs):
                 continue
 
@@ -139,6 +142,7 @@ def main():
             continue
 
         kernel_sec.issue.save(cve_id, ours)
+
 
 if __name__ == '__main__':
     main()

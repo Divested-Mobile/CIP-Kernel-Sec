@@ -14,7 +14,10 @@ import re
 import subprocess
 import sys
 
-import kernel_sec.branch, kernel_sec.issue, kernel_sec.version
+import kernel_sec.branch
+import kernel_sec.issue
+import kernel_sec.version
+
 
 def get_commits(git_repo, end, start=None):
     if start:
@@ -27,8 +30,9 @@ def get_commits(git_repo, end, start=None):
     for line in io.TextIOWrapper(list_proc.stdout):
         yield line.rstrip('\n')
 
-def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream,
-         include_ignored, *branch_names):
+
+def main(git_repo, mainline_remote_name, stable_remote_name,
+         only_fixed_upstream, include_ignored, *branch_names):
     if branch_names:
         # Support stable release strings as shorthand for stable branches
         branch_names = [kernel_sec.branch.get_base_ver_stable_branch(name)
@@ -82,8 +86,8 @@ def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream
                     continue
                 if branch not in introduced:
                     for commit in introduced['mainline']:
-                        if commit in commit_sort_key \
-                           and commit_sort_key[commit] <= branch_sort_key[branch]:
+                        if commit in commit_sort_key and \
+                           commit_sort_key[commit] <= branch_sort_key[branch]:
                             break
                     else:
                         continue
@@ -91,12 +95,14 @@ def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream
             # Check whether it is ignored on this branch, unless we're
             # overriding that
             ignore = issue.get('ignore', {})
-            if not include_ignored and (ignore.get('all') or ignore.get(branch)):
+            if not include_ignored and \
+               (ignore.get('all') or ignore.get(branch)):
                 continue
 
             fixed = issue.get('fixed-by', {})
 
-            if only_fixed_upstream and fixed.get('mainline', 'never') == 'never':
+            if only_fixed_upstream and \
+               fixed.get('mainline', 'never') == 'never':
                 continue
 
             # If it was fixed on this branch, or fixed on mainline before
@@ -106,8 +112,8 @@ def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream
                     continue
                 if fixed.get('mainline', 'never') != 'never':
                     for commit in fixed['mainline']:
-                        if commit not in commit_sort_key \
-                           or commit_sort_key[commit] > branch_sort_key[branch]:
+                        if commit not in commit_sort_key or \
+                           commit_sort_key[commit] > branch_sort_key[branch]:
                             break
                     else:
                         continue
@@ -118,12 +124,14 @@ def main(git_repo, mainline_remote_name, stable_remote_name, only_fixed_upstream
         print('%s:' % branch, *sorted(branch_issues.get(branch, []),
                                       key=kernel_sec.issue.get_id_sort_key))
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Report unfixed CVEs in Linux kernel branches.')
     parser.add_argument('--git-repo',
                         dest='git_repo', default='../kernel',
-                        help='git repository from which to read commit logs (default: ../kernel)',
+                        help=('git repository from which to read commit logs '
+                              '(default: ../kernel)'),
                         metavar='DIRECTORY')
     parser.add_argument('--mainline-remote',
                         dest='mainline_remote_name', default='torvalds',
@@ -131,7 +139,8 @@ if __name__ == '__main__':
                         metavar='NAME')
     parser.add_argument('--stable-remote',
                         dest='stable_remote_name', default='stable',
-                        help='git remote for stable branches (default: stable)',
+                        help=('git remote for stable branches '
+                              '(default: stable)'),
                         metavar='NAME')
     parser.add_argument('--only-fixed-upstream',
                         action='store_true',
@@ -141,7 +150,8 @@ if __name__ == '__main__':
                         help='include issues that have been marked as ignored')
     parser.add_argument('branches',
                         nargs='*',
-                        help='specific branch to report on (default: all active branches)',
+                        help=('specific branch to report on '
+                              '(default: all active branches)'),
                         metavar='BRANCH')
     args = parser.parse_args()
     main(args.git_repo, args.mainline_remote_name, args.stable_remote_name,
