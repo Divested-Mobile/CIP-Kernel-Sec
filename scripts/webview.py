@@ -60,7 +60,7 @@ _issue_cache = IssueCache()
 class Branch:
     _template = _template_env.get_template('branch.html')
 
-    def __init__(self, branch):
+    def __init__(self, name):
         self._name = name
 
     @cherrypy.expose
@@ -77,7 +77,7 @@ class Branches:
         self._names.append('mainline')
 
     def _cp_dispatch(self, vpath):
-        if len(vpath) == 1 and vpath[0] in self._branches:
+        if len(vpath) == 1 and vpath[0] in self._names:
             return Branch(vpath.pop())
         return vpath
 
