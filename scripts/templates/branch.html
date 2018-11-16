@@ -1,7 +1,10 @@
 <title>Branch {{ name }}</title>
 <h1>Branch {{ name }}</h1>
 <ul>
-  {% for cve_id in issues %}
-  <li><a href="/issues/{{ cve_id }}/">{{ cve_id }}</a></li>
+  {% for cve_id, issue in issues %}
+  <li>
+    <a href="/issues/{{ cve_id }}/">{{ cve_id }}</a> -
+    {{ issue.description|truncate(100) }}
+  </li>
   {% endfor %}
 </ul>

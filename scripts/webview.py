@@ -68,12 +68,14 @@ class Branch:
     def index(self):
         return self._template.render(
             name=self._name,
-            issues=sorted(
-                [cve_id for cve_id in _issue_cache.keys()
-                 if kernel_sec.issue.affects_branch(
-                         _issue_cache[cve_id], self._name,
-                         self._c_b_map.is_commit_in_branch)],
-                key=kernel_sec.issue.get_id_sort_key))
+            issues=[
+                (cve_id, _issue_cache[cve_id])
+                for cve_id in sorted(_issue_cache.keys(),
+                                     key=kernel_sec.issue.get_id_sort_key)
+                if kernel_sec.issue.affects_branch(
+                        _issue_cache[cve_id], self._name,
+                        self._c_b_map.is_commit_in_branch)
+            ])
 
 
 class Branches:
@@ -119,8 +121,11 @@ class Issues:
     @cherrypy.expose
     def index(self):
         return self._template.render(
-            cve_ids=sorted(_issue_cache.keys(),
-                           key=kernel_sec.issue.get_id_sort_key))
+            cve_ids=[
+                (cve_id, _issue_cache[cve_id])
+                for cve_id in sorted(_issue_cache.keys(),
+                                     key=kernel_sec.issue.get_id_sort_key)
+            ])
 
 
 class Root:
