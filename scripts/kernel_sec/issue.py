@@ -229,7 +229,7 @@ class _IssueLoader(yaml.loader.SafeLoader):
     # discarding it.
     def construct_yaml_timestamp(self, node):
         value = self.construct_scalar(node)
-        match = self.timestamp_regexp.match(node.value)
+        match = self.timestamp_regexp.match(value)
         values = match.groupdict()
         year = int(values['year'])
         month = int(values['month'])
