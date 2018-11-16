@@ -18,3 +18,10 @@ body {
 .ignored > :visited {
     color: #b366d9;
 }
+
+.good {
+    color: #33cc33;
+}
+.bad {
+    color: #ff0000;
+}

@@ -101,5 +101,21 @@
     </td>
   </tr>
   {% endif %}
+  <tr>
+    <th>Status</th>
+    <td>
+      {% for name, affected in branches %}
+      <a href="/branch/{{ name }}/">{{ name }}</a>:
+      {% if not affected %}
+      {# Currently we don't distinguish between never-affected or fixed #}
+      <span class="good">not affected</span>
+      {% elif issue.ignore and (issue.ignore.all or issue.ignore[name]) %}
+      <span class="ignored">ignored</span>
+      {% else %}
+      <span class="bad">vulnerable</span>
+      {% endif %}
+      {% if not loop.last %}<br/>{% endif %}
+      {% endfor %}
+    </td>
+  </tr>
 </table>
-{# TODO: show issue status for each branch #}

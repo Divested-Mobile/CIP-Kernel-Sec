@@ -97,21 +97,33 @@ class Branches:
 class Issue:
     _template = _template_env.get_template('issue.html')
 
-    def __init__(self, cve_id):
+    def __init__(self, cve_id, root):
         self._cve_id = cve_id
+        self._root = root
 
     @cherrypy.expose
     def index(self):
-        return self._template.render(cve_id=self._cve_id,
-                                     issue=_issue_cache[self._cve_id])
+        issue = _issue_cache[self._cve_id]
+        return self._template.render(
+            cve_id=self._cve_id,
+            issue=issue,
+            branches=[
+                (name,
+                 kernel_sec.issue.affects_branch(
+                     issue, name, self._root.is_commit_in_branch))
+                for name in self._root.branch_names
+            ])
 
 
 class Issues:
     _template = _template_env.get_template('issues.html')
 
+    def __init__(self, root):
+        self._root = root
+
     def _cp_dispatch(self, vpath):
         if len(vpath) == 1 and vpath[0] in _issue_cache:
-            return Issue(vpath.pop())
+            return Issue(vpath.pop(), self._root)
         return vpath
 
     @cherrypy.expose
@@ -137,7 +149,7 @@ class Root:
         self.is_commit_in_branch = c_b_map.is_commit_in_branch
 
         self.branches = Branches(self)
-        self.issues = Issues()
+        self.issues = Issues(self)
 
     def _cp_dispatch(self, vpath):
         if vpath[0] == 'branch':
