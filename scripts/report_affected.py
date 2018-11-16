@@ -9,24 +9,11 @@
 # Report issues affecting each stable branch.
 
 import argparse
-import io
 import subprocess
 
 import kernel_sec.branch
 import kernel_sec.issue
 import kernel_sec.version
-
-
-def get_commits(git_repo, end, start=None):
-    if start:
-        list_expr = '%s..%s' % (start, end)
-    else:
-        list_expr = end
-
-    list_proc = subprocess.Popen(['git', 'rev-list', list_expr],
-                                 cwd=git_repo, stdout=subprocess.PIPE)
-    for line in io.TextIOWrapper(list_proc.stdout):
-        yield line.rstrip('\n')
 
 
 def main(git_repo, mainline_remote_name, stable_remote_name,
@@ -42,31 +29,10 @@ def main(git_repo, mainline_remote_name, stable_remote_name,
         if not only_fixed_upstream:
             branch_names.append('mainline')
 
-    # Generate sort key for each branch
-    branch_sort_key = {}
-    for branch in branch_names:
-        if branch == 'mainline':
-            branch_sort_key[branch] = [1000000]
-        else:
-            base_ver = kernel_sec.branch.get_stable_branch_base_ver(branch)
-            assert base_ver is not None
-            branch_sort_key[branch] = kernel_sec.version.get_sort_key(base_ver)
+    branch_names.sort(key=kernel_sec.branch.get_sort_key)
 
-    branch_names.sort(key=(lambda branch: branch_sort_key[branch]))
-
-    # Generate sort key for each commit
-    commit_sort_key = {}
-    start = None
-    for branch in branch_names:
-        if branch == 'mainline':
-            end = '%s/master' % mainline_remote_name
-        else:
-            base_ver = kernel_sec.branch.get_stable_branch_base_ver(branch)
-            assert base_ver is not None
-            end = 'v' + base_ver
-        for commit in get_commits(git_repo, end, start):
-            commit_sort_key[commit] = branch_sort_key[branch]
-        start = end
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, mainline_remote_name,
+                                                branch_names)
 
     branch_issues = {}
     issues = set(kernel_sec.issue.get_list())
@@ -84,8 +50,7 @@ def main(git_repo, mainline_remote_name, stable_remote_name,
                     continue
                 if branch not in introduced:
                     for commit in introduced['mainline']:
-                        if commit in commit_sort_key and \
-                           commit_sort_key[commit] <= branch_sort_key[branch]:
+                        if c_b_map.is_commit_in_branch(commit, branch):
                             break
                     else:
                         continue
@@ -110,8 +75,7 @@ def main(git_repo, mainline_remote_name, stable_remote_name,
                     continue
                 if fixed.get('mainline', 'never') != 'never':
                     for commit in fixed['mainline']:
-                        if commit not in commit_sort_key or \
-                           commit_sort_key[commit] > branch_sort_key[branch]:
+                        if not c_b_map.is_commit_in_branch(commit, branch):
                             break
                     else:
                         continue

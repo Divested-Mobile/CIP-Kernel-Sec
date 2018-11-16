@@ -4,8 +4,11 @@
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
 # for details.
 
+import io
 import re
 import subprocess
+
+from . import version
 
 
 _STABLE_BRANCH_RE = re.compile(r'^linux-([\d.]+)\.y$')
@@ -66,3 +69,49 @@ def get_live_stable_branches(*args, **kwargs):
 
     return [branch_name for branch_name in get_stable_branches(*args, **kwargs)
             if branch_name not in dead_branches]
+
+
+def get_sort_key(branch):
+    if branch == 'mainline':
+        return [1000000]
+    base_ver = get_stable_branch_base_ver(branch)
+    assert base_ver is not None
+    return version.get_sort_key(base_ver)
+
+
+def _get_commits(git_repo, end, start=None):
+    if start:
+        list_expr = '%s..%s' % (start, end)
+    else:
+        list_expr = end
+
+    list_proc = subprocess.Popen(['git', 'rev-list', list_expr],
+                                 cwd=git_repo, stdout=subprocess.PIPE)
+    for line in io.TextIOWrapper(list_proc.stdout):
+        yield line.rstrip('\n')
+
+
+class CommitBranchMap:
+    def __init__(self, git_repo, mainline_remote_name, branch_names):
+        # Generate sort key for each branch
+        self._branch_sort_key = {
+            branch: get_sort_key(branch) for branch in branch_names
+        }
+
+        # Generate sort key for each commit
+        self._commit_sort_key = {}
+        start = None
+        for branch in sorted(branch_names, key=get_sort_key):
+            if branch == 'mainline':
+                end = '%s/master' % mainline_remote_name
+            else:
+                base_ver = get_stable_branch_base_ver(branch)
+                assert base_ver is not None
+                end = 'v' + base_ver
+            for commit in _get_commits(git_repo, end, start):
+                self._commit_sort_key[commit] = self._branch_sort_key[branch]
+            start = end
+
+    def is_commit_in_branch(self, commit, branch):
+        return commit in self._commit_sort_key and \
+            self._commit_sort_key[commit] <= self._branch_sort_key[branch]
