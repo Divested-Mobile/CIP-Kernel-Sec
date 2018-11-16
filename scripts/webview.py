@@ -168,5 +168,16 @@ if __name__ == '__main__':
                               '(default: stable)'),
                         metavar='NAME')
     args = parser.parse_args()
+
+    conf = {
+        '/static/style.css': {
+            'tools.staticfile.on': True,
+            'tools.staticfile.filename':
+            os.path.abspath('scripts/templates/style.css')
+        }
+    }
+
     cherrypy.quickstart(Root(args.git_repo, args.mainline_remote_name,
-                             args.stable_remote_name))
+                             args.stable_remote_name),
+                        '/',
+                        conf)
