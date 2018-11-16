@@ -10,9 +10,7 @@
 
 import argparse
 import io
-import re
 import subprocess
-import sys
 
 import kernel_sec.branch
 import kernel_sec.issue

@@ -10,12 +10,10 @@ import argparse
 import sys
 
 from kernel_sec.issue \
-    import get_filename, get_list, load, load_filename, validate
+    import get_filename, get_list, load_filename, validate
 
 
 def main(*names):
-    import glob
-
     rc = 0
     if len(names) == 0:
         names = [get_filename(cve_id) for cve_id in get_list()]
