@@ -60,9 +60,9 @@ _issue_cache = IssueCache()
 class Branch:
     _template = _template_env.get_template('branch.html')
 
-    def __init__(self, name, c_b_map):
+    def __init__(self, name, root):
         self._name = name
-        self._c_b_map = c_b_map
+        self._root = root
 
     @cherrypy.expose
     def index(self):
@@ -74,28 +74,24 @@ class Branch:
                                      key=kernel_sec.issue.get_id_sort_key)
                 if kernel_sec.issue.affects_branch(
                         _issue_cache[cve_id], self._name,
-                        self._c_b_map.is_commit_in_branch)
+                        self._root.is_commit_in_branch)
             ])
 
 
 class Branches:
     _template = _template_env.get_template('branches.html')
 
-    def __init__(self, git_repo, mainline_remote_name, stable_remote_name):
-        self._names = kernel_sec.branch.get_live_stable_branches(
-            git_repo, stable_remote_name)
-        self._names.append('mainline')
-        self._c_b_map = kernel_sec.branch.CommitBranchMap(
-            git_repo, mainline_remote_name, self._names)
+    def __init__(self, root):
+        self._root = root
 
     def _cp_dispatch(self, vpath):
-        if len(vpath) == 1 and vpath[0] in self._names:
-            return Branch(vpath.pop(), self._c_b_map)
+        if len(vpath) == 1 and vpath[0] in self._root.branch_names:
+            return Branch(vpath.pop(), self._root)
         return vpath
 
     @cherrypy.expose
     def index(self):
-        return self._template.render(names=self._names)
+        return self._template.render(names=self._root.branch_names)
 
 
 class Issue:
@@ -132,8 +128,15 @@ class Root:
     _template = _template_env.get_template('root.html')
 
     def __init__(self, git_repo, mainline_remote_name, stable_remote_name):
-        self.branches = Branches(git_repo, mainline_remote_name,
-                                 stable_remote_name)
+        self.branch_names = kernel_sec.branch.get_live_stable_branches(
+            git_repo, stable_remote_name)
+        self.branch_names.append('mainline')
+
+        c_b_map = kernel_sec.branch.CommitBranchMap(
+            git_repo, mainline_remote_name, self.branch_names)
+        self.is_commit_in_branch = c_b_map.is_commit_in_branch
+
+        self.branches = Branches(self)
         self.issues = Issues()
 
     def _cp_dispatch(self, vpath):
