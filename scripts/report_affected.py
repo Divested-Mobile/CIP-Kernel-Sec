@@ -39,18 +39,17 @@ def main(git_repo, mainline_remote_name, stable_remote_name,
 
     for cve_id in issues:
         issue = kernel_sec.issue.load(cve_id)
+        ignore = issue.get('ignore', {})
+        fixed = issue.get('fixed-by', {})
+
+        # Should this issue be ignored?
+        if (not include_ignored and ignore.get('all')) or \
+           (only_fixed_upstream and fixed.get('mainline', 'never') == 'never'):
+            continue
 
         for branch in branch_names:
-            # Check whether it is ignored on this branch, unless we're
-            # overriding that
-            ignore = issue.get('ignore', {})
-            if not include_ignored and \
-               (ignore.get('all') or ignore.get(branch)):
-                continue
-
-            fixed = issue.get('fixed-by', {})
-            if only_fixed_upstream and \
-               fixed.get('mainline', 'never') == 'never':
+            # Should this issue be ignored for this branch?
+            if not include_ignored and ignore.get(branch):
                 continue
 
             if kernel_sec.issue.affects_branch(
