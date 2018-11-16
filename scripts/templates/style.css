@@ -8,3 +8,13 @@ body {
 :visited {
     color: #8000c0;
 }
+
+.ignored {
+    color: #666666;
+}
+.ignored > :link {
+    color: #6666ff;
+}
+.ignored > :visited {
+    color: #b366d9;
+}

@@ -3,7 +3,7 @@
 <h1>Issues</h1>
 <ul>
   {% for cve_id, issue in cve_ids %}
-  <li>
+  <li class="{% if issue.ignore and issue.ignore.all %}ignored{% endif %}">
     <a href="{{ cve_id }}/">{{ cve_id }}</a> -
     {{ issue.description|truncate(100) }}
   </li>
