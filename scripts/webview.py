@@ -60,12 +60,20 @@ _issue_cache = IssueCache()
 class Branch:
     _template = _template_env.get_template('branch.html')
 
-    def __init__(self, name):
+    def __init__(self, name, c_b_map):
         self._name = name
+        self._c_b_map = c_b_map
 
     @cherrypy.expose
     def index(self):
-        return self._template.render(name=self._name)
+        return self._template.render(
+            name=self._name,
+            issues=sorted(
+                [cve_id for cve_id in _issue_cache.keys()
+                 if kernel_sec.issue.affects_branch(
+                         _issue_cache[cve_id], self._name,
+                         self._c_b_map.is_commit_in_branch)],
+                key=kernel_sec.issue.get_id_sort_key))
 
 
 class Branches:
@@ -75,10 +83,12 @@ class Branches:
         self._names = kernel_sec.branch.get_live_stable_branches(
             git_repo, stable_remote_name)
         self._names.append('mainline')
+        self._c_b_map = kernel_sec.branch.CommitBranchMap(
+            git_repo, mainline_remote_name, self._names)
 
     def _cp_dispatch(self, vpath):
         if len(vpath) == 1 and vpath[0] in self._names:
-            return Branch(vpath.pop())
+            return Branch(vpath.pop(), self._c_b_map)
         return vpath
 
     @cherrypy.expose
