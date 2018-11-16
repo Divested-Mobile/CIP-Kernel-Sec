@@ -298,3 +298,34 @@ _cve_id_arbdig_re = re.compile(r'-(\d+)$')
 # Pad "arbitrary digits" to 6 digits so string comparison works
 def get_id_sort_key(cve_id):
     return _cve_id_arbdig_re.sub(lambda m: '-%06d' % int(m.group(1)), cve_id)
+
+
+def affects_branch(issue, branch, is_commit_in_branch):
+    # If it was not introduced on this branch, and was introduced on
+    # mainline after the branch point, branch is not affected
+    introduced = issue.get('introduced-by')
+    if introduced:
+        if introduced.get('mainline') == 'never' and \
+           (branch == 'mainline' or branch not in introduced):
+            return False
+        if branch not in introduced:
+            for commit in introduced['mainline']:
+                if is_commit_in_branch(commit, branch):
+                    break
+            else:
+                return False
+
+    # If it was fixed on this branch, or fixed on mainline before
+    # the branch point, branch is not affected
+    fixed = issue.get('fixed-by', {})
+    if fixed:
+        if fixed.get(branch, 'never') != 'never':
+            return False
+        if fixed.get('mainline', 'never') != 'never':
+            for commit in fixed['mainline']:
+                if not is_commit_in_branch(commit, branch):
+                    break
+            else:
+                return False
+
+    return True

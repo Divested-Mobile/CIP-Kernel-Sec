@@ -41,20 +41,6 @@ def main(git_repo, mainline_remote_name, stable_remote_name,
         issue = kernel_sec.issue.load(cve_id)
 
         for branch in branch_names:
-            # If it was not introduced on this branch, and was introduced on
-            # mainline after the branch point, branch is not affected
-            introduced = issue.get('introduced-by')
-            if introduced:
-                if introduced.get('mainline') == 'never' and \
-                   (branch == 'mainline' or branch not in introduced):
-                    continue
-                if branch not in introduced:
-                    for commit in introduced['mainline']:
-                        if c_b_map.is_commit_in_branch(commit, branch):
-                            break
-                    else:
-                        continue
-
             # Check whether it is ignored on this branch, unless we're
             # overriding that
             ignore = issue.get('ignore', {})
@@ -63,24 +49,13 @@ def main(git_repo, mainline_remote_name, stable_remote_name,
                 continue
 
             fixed = issue.get('fixed-by', {})
-
             if only_fixed_upstream and \
                fixed.get('mainline', 'never') == 'never':
                 continue
 
-            # If it was fixed on this branch, or fixed on mainline before
-            # the branch point, branch is not affected
-            if fixed:
-                if fixed.get(branch, 'never') != 'never':
-                    continue
-                if fixed.get('mainline', 'never') != 'never':
-                    for commit in fixed['mainline']:
-                        if not c_b_map.is_commit_in_branch(commit, branch):
-                            break
-                    else:
-                        continue
-
-            branch_issues.setdefault(branch, []).append(cve_id)
+            if kernel_sec.issue.affects_branch(
+                    issue, branch, c_b_map.is_commit_in_branch):
+                branch_issues.setdefault(branch, []).append(cve_id)
 
     for branch in branch_names:
         print('%s:' % branch, *sorted(branch_issues.get(branch, []),
