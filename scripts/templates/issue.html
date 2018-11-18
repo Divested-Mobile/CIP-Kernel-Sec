@@ -79,9 +79,13 @@
       {{ branch }}
     </th>
     <td>
+      {% if issue['introduced-by'][branch] == 'never' %}
+      never
+      {% else %}
       {% for commit in issue['introduced-by'][branch] %}
       <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
       {% endfor %}
+      {% endif %}
     </td>
     {% if not loop.last %}
   </tr>
@@ -98,9 +102,13 @@
       {{ branch }}
     </th>
     <td>
+      {% if issue['fixed-by'][branch] == 'never' %}
+      never
+      {% else %}
       {% for commit in issue['fixed-by'][branch] %}
       <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
       {% endfor %}
+      {% endif %}
     </td>
     {% if not loop.last %}
   </tr>
