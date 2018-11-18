@@ -143,6 +143,7 @@ class Root:
         self.branch_names = kernel_sec.branch.get_live_stable_branches(
             git_repo, stable_remote_name)
         self.branch_names.append('mainline')
+        self.branch_names.sort(key=kernel_sec.branch.get_sort_key)
 
         c_b_map = kernel_sec.branch.CommitBranchMap(
             git_repo, mainline_remote_name, self.branch_names)
