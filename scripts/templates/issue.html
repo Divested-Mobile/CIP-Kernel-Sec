@@ -71,20 +71,34 @@
     </td>
   </tr>
   {% endif %}
-  {% if issue['introduced-by'] %}
   <tr>
-    <th rowspan={{ issue['introduced-by']|length }}>Introduced by</th>
-    {% for branch in issue['introduced-by'] %}
+    <th rowspan={{ branches|length }}>Status</th>
+    {% for name, affected in branches %}
     <th>
-      {{ branch }}
+      <a href="/branch/{{ name }}/">{{ name }}</a>
     </th>
     <td>
-      {% if issue['introduced-by'][branch] == 'never' %}
-      never
-      {% else %}
-      {% for commit in issue['introduced-by'][branch] %}
+      {% if not affected %}
+      {% if issue['fixed-by'] and issue['fixed-by'][name] and issue['fixed-by'][name] != 'never' %}
+      <span class="good">fixed</span> by
+      {% for commit in issue['fixed-by'][name] %}
       <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
       {% endfor %}
+      {% else %}
+      <span class="good">never affected</span>
+      {% endif %}
+      {% else %}
+      {% if issue.ignore and (issue.ignore.all or issue.ignore[name]) %}
+      <span class="ignored">ignored</span>
+      {% else %}
+      <span class="bad">vulnerable</span>
+      {% endif %}
+      {% if issue['introduced-by'] and issue['introduced-by'][name] and issue['introduced-by'][name] != 'never' %}
+      - introduced by
+      {% for commit in issue['introduced-by'][name] %}
+      <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
+      {% endfor %}
+      {% endif %}
       {% endif %}
     </td>
     {% if not loop.last %}
@@ -93,30 +107,6 @@
     {% endif %}
     {% endfor %}
   </tr>
-  {% endif %}
-  {% if issue['fixed-by'] %}
-  <tr>
-    <th rowspan={{ issue['fixed-by']|length }}>Fixed by</th>
-    {% for branch in issue['fixed-by'] %}
-    <th>
-      {{ branch }}
-    </th>
-    <td>
-      {% if issue['fixed-by'][branch] == 'never' %}
-      never
-      {% else %}
-      {% for commit in issue['fixed-by'][branch] %}
-      <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
-      {% endfor %}
-      {% endif %}
-    </td>
-    {% if not loop.last %}
-  </tr>
-  <tr>
-    {% endif %}
-    {% endfor %}
-  </tr>
-  {% endif %}
   {% if issue['fix-depends-on'] %}
   <tr>
     <th>Fix depends on</th>
@@ -130,26 +120,4 @@
     </td>
   </tr>
   {% endif %}
-  <tr>
-    <th rowspan={{ branches|length }}>Status</th>
-    {% for name, affected in branches %}
-    <th>
-      <a href="/branch/{{ name }}/">{{ name }}</a>
-    </th>
-    <td>
-      {% if not affected %}
-      {# Currently we don't distinguish between never-affected or fixed #}
-      <span class="good">not affected</span>
-      {% elif issue.ignore and (issue.ignore.all or issue.ignore[name]) %}
-      <span class="ignored">ignored</span>
-      {% else %}
-      <span class="bad">vulnerable</span>
-      {% endif %}
-    </td>
-    {% if not loop.last %}
-  </tr>
-  <tr>
-    {% endif %}
-    {% endfor %}
-  </tr>
 </table>
