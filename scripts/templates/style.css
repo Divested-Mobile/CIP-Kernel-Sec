@@ -20,10 +20,10 @@ body {
 }
 
 .good {
-    color: #33cc33;
+    background-color: #40ff40;
 }
 .bad {
-    color: #ff0000;
+    background-color: #ff4040;
 }
 
 table {
