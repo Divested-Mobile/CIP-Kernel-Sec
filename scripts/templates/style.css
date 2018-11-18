@@ -25,3 +25,20 @@ body {
 .bad {
     color: #ff0000;
 }
+
+table {
+    border-collapse: collapse;
+}
+tr {
+    border-top: solid 1px;
+    border-bottom: solid 1px;
+}
+th {
+    text-align: right;
+    vertical-align: top;
+    white-space: nowrap;
+}
+th, td {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
