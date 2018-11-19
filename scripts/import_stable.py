@@ -35,8 +35,7 @@ def update(git_repo, remote_name):
                           cwd=git_repo)
 
 
-def get_backports(git_repo, remote_name):
-    branches = kernel_sec.branch.get_stable_branches(git_repo, remote_name)
+def get_backports(git_repo, remote_name, branches):
     backports = {}
 
     for branch_name in branches:
@@ -66,7 +65,7 @@ def get_backports(git_repo, remote_name):
     return backports
 
 
-def add_backports(issue_commits, all_backports):
+def add_backports(branches, c_b_map, issue_commits, all_backports):
     try:
         mainline_commits = issue_commits['mainline']
     except KeyError:
@@ -74,32 +73,46 @@ def add_backports(issue_commits, all_backports):
 
     changed = False
 
-    # Find backports of each commit to each stable branch
-    branch_commits = {}
-    for commit in mainline_commits:
-        try:
-            commit_backports = all_backports[commit]
-        except KeyError:
+    for branch_name in branches:
+        # Don't replace a non-empty field
+        if issue_commits.get(branch_name):
             continue
-        for branch_name in commit_backports:
-            branch_commits.setdefault(branch_name, []).append(
-                commit_backports[branch_name])
 
-    # Only record if all commits have been backported and nothing recorded
-    # for this branch yet
-    for branch_name in branch_commits:
-        if len(branch_commits[branch_name]) == len(mainline_commits):
-            issue_branch_commits = issue_commits.setdefault(branch_name, [])
-            if not issue_branch_commits:
-                issue_branch_commits.extend(branch_commits[branch_name])
+        branch_commits = []
+        for commit in mainline_commits:
+            # Was this commit included before the branch point?
+            if c_b_map.is_commit_in_branch(commit, branch_name):
+                branch_commits.append(commit)
+            else:
+                # Has it been backported?
+                try:
+                    backport_commit = all_backports[commit][branch_name]
+                except KeyError:
+                    continue
+                if debug_context:
+                    print('%s/%s: includes backport of %s' %
+                          (debug_context, branch_name, commit))
+                branch_commits.append(backport_commit)
+
+        if len(branch_commits) == len(mainline_commits):
+            # All required commits were found.  If some or all of them are
+            # backports then record them.
+            if branch_commits != mainline_commits:
+                issue_commits.setdefault(branch_name, []).extend(branch_commits)
                 changed = True
 
     return changed
 
 
-def main(git_repo, remote_name):
-    update(git_repo, remote_name)
-    backports = get_backports(git_repo, remote_name)
+def main(git_repo, mainline_remote_name, stable_remote_name):
+    stable_branches = kernel_sec.branch.get_stable_branches(git_repo,
+                                                            stable_remote_name)
+    branches = stable_branches + ['mainline']
+
+    update(git_repo, stable_remote_name)
+    backports = get_backports(git_repo, stable_remote_name, stable_branches)
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, mainline_remote_name,
+                                                branches)
 
     issues = set(kernel_sec.issue.get_list())
     for cve_id in issues:
@@ -111,7 +124,8 @@ def main(git_repo, remote_name):
             except KeyError:
                 continue
             else:
-                changed |= add_backports(commits, backports)
+                changed |= add_backports(stable_branches, c_b_map,
+                                         commits, backports)
         if changed:
             kernel_sec.issue.save(cve_id, issue)
 
@@ -125,10 +139,14 @@ if __name__ == '__main__':
                         help=('git repository from which to read commit logs '
                               '(default: ../kernel)'),
                         metavar='DIRECTORY')
+    parser.add_argument('--mainline-remote',
+                        dest='mainline_remote_name', default='torvalds',
+                        help='git remote for mainline (default: torvalds)',
+                        metavar='NAME')
     parser.add_argument('--stable-remote',
                         dest='stable_remote_name', default='stable',
                         help=('git remote for stable branches '
                               '(default: stable)'),
                         metavar='NAME')
     args = parser.parse_args()
-    main(args.git_repo, args.stable_remote_name)
+    main(args.git_repo, args.mainline_remote_name, args.stable_remote_name)
