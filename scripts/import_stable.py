@@ -65,7 +65,8 @@ def get_backports(git_repo, remote_name, branches):
     return backports
 
 
-def add_backports(branches, c_b_map, issue_commits, all_backports):
+def add_backports(branches, c_b_map, issue_commits, all_backports,
+                  debug_context=None):
     try:
         mainline_commits = issue_commits['mainline']
     except KeyError:
@@ -76,18 +77,26 @@ def add_backports(branches, c_b_map, issue_commits, all_backports):
     for branch_name in branches:
         # Don't replace a non-empty field
         if issue_commits.get(branch_name):
+            if debug_context:
+                print('%s/%s: already set' % (debug_context, branch_name))
             continue
 
         branch_commits = []
         for commit in mainline_commits:
             # Was this commit included before the branch point?
             if c_b_map.is_commit_in_branch(commit, branch_name):
+                if debug_context:
+                    print('%s/%s: includes %s' %
+                          (debug_context, branch_name, commit))
                 branch_commits.append(commit)
             else:
                 # Has it been backported?
                 try:
                     backport_commit = all_backports[commit][branch_name]
                 except KeyError:
+                    if debug_context:
+                        print('%s/%s: missing %s' %
+                              (debug_context, branch_name, commit))
                     continue
                 if debug_context:
                     print('%s/%s: includes backport of %s' %
@@ -98,13 +107,20 @@ def add_backports(branches, c_b_map, issue_commits, all_backports):
             # All required commits were found.  If some or all of them are
             # backports then record them.
             if branch_commits != mainline_commits:
+                if debug_context:
+                    print('%s/%s: recording commits' %
+                          (debug_context, branch_name))
                 issue_commits.setdefault(branch_name, []).extend(branch_commits)
                 changed = True
+            else:
+                if debug_context:
+                    print('%s/%s: not recording commits - same as mainline' %
+                          (debug_context, branch_name))
 
     return changed
 
 
-def main(git_repo, mainline_remote_name, stable_remote_name):
+def main(git_repo, mainline_remote_name, stable_remote_name, debug=False):
     stable_branches = kernel_sec.branch.get_live_stable_branches(
         git_repo, stable_remote_name)
     branches = stable_branches + ['mainline']
@@ -124,8 +140,10 @@ def main(git_repo, mainline_remote_name, stable_remote_name):
             except KeyError:
                 continue
             else:
+                debug_context = '%s/%s' % (cve_id, name) if debug else None
                 changed |= add_backports(stable_branches, c_b_map,
-                                         commits, backports)
+                                         commits, backports,
+                                         debug_context=debug_context)
         if changed:
             kernel_sec.issue.save(cve_id, issue)
 
@@ -148,5 +166,9 @@ if __name__ == '__main__':
                         help=('git remote for stable branches '
                               '(default: stable)'),
                         metavar='NAME')
+    parser.add_argument('--debug',
+                        dest='debug', action='store_true',
+                        help='enable debugging output')
     args = parser.parse_args()
-    main(args.git_repo, args.mainline_remote_name, args.stable_remote_name)
+    main(args.git_repo, args.mainline_remote_name, args.stable_remote_name,
+         args.debug)
