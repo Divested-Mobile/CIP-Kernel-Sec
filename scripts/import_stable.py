@@ -71,6 +71,8 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
         mainline_commits = issue_commits['mainline']
     except KeyError:
         return False
+    if mainline_commits == 'never':
+        return False
 
     changed = False
 
