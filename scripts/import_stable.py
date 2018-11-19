@@ -18,12 +18,16 @@ import kernel_sec.branch
 import kernel_sec.issue
 
 
-BACKPORT_COMMIT_RE = re.compile(
-    r'^(?:' r'commit (%s) upstream\.'
-    r'|'    r'\[ Upstream commit (%s) \]'
-    r'|'    r'\(cherry-picked from commit (%s)\)'
+COMMIT_HASH_RE = r'[0-9a-f]{40}'
+BACKPORT_COMMIT_TOP_RE = re.compile(
+    r'^(?:' r'commit (%s)(?: upstream\.?)?'
+    r'|'    r'\[ [Uu]pstream commit (%s) \]'
+    r'|'    r'\(cherry[- ]picked from commit (%s)\)'
     r')$'
-    % ((r'[0-9a-f]{40}',) * 3))
+    % (COMMIT_HASH_RE, COMMIT_HASH_RE, COMMIT_HASH_RE))
+BACKPORT_COMMIT_BOTTOM_RE = re.compile(
+    r'^\(cherry[- ]picked from commit (%s)\)$'
+    % COMMIT_HASH_RE)
 
 
 def update(git_repo, remote_name):
@@ -48,13 +52,16 @@ def get_backports(git_repo, remote_name):
                                      errors='ignore'):
             if line[0] != ' ':
                 stable_commit = line.rstrip('\n')
+                commit_re = BACKPORT_COMMIT_TOP_RE  # next line is top of body
             else:
-                match = BACKPORT_COMMIT_RE.match(line[1:])
+                match = commit_re.match(line[1:])
                 if match:
                     mainline_commit = match.group(1) or match.group(2) \
                                       or match.group(3)
                     backports.setdefault(mainline_commit, {})[branch_name] \
                         = stable_commit
+                if line.strip() != '':
+                    commit_re = BACKPORT_COMMIT_BOTTOM_RE  # next line is not top
 
     return backports
 
