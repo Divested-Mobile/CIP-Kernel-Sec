@@ -8,6 +8,7 @@
 
 import argparse
 import os
+import re
 
 import cherrypy
 import jinja2
@@ -16,9 +17,27 @@ import kernel_sec.branch
 import kernel_sec.issue
 
 
+# Match host part and either query part or last path part
+_URL_ABBREV_RE = re.compile(
+    r'^https?://([^/]*/?)(?:([^?]*)(\?.*)|(.*?)(/[^/]*/?))$')
+
+
+def _url_abbrev(value):
+    match = _URL_ABBREV_RE.match(value)
+    if not match:
+        return value
+    elif match.group(2) and match.group(3):
+        return match.expand(r'\1…\3')
+    elif match.group(4) and match.group(5):
+        return match.expand(r'\1…\5')
+    else:
+        return match.expand(r'\1\3\5')
+
+
 _template_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader('scripts/templates'),
     autoescape=True)
+_template_env.filters['urlabbrev'] = _url_abbrev
 
 
 class IssueCache:

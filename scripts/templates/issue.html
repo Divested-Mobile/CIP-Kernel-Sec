@@ -14,7 +14,7 @@
     <td/>
     <td>
       {% for url in issue.references %}
-      <a href="{{ url }}">{{ url }}</a>
+      <a href="{{ url }}">{{ url|urlabbrev }}</a>
       {% if not loop.last %}|{% endif %}
       {% endfor %}
     </td>
