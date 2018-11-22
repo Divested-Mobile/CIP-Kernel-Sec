@@ -140,8 +140,7 @@ class Root:
     _template = _template_env.get_template('root.html')
 
     def __init__(self, git_repo, mainline_remote_name, stable_remote_name):
-        self.branch_names = kernel_sec.branch.get_live_stable_branches(
-            git_repo, stable_remote_name)
+        self.branch_names = kernel_sec.branch.get_live_stable_branches()
         self.branch_names.append('mainline')
         self.branch_names.sort(key=kernel_sec.branch.get_sort_key)
 

@@ -123,8 +123,7 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
 
 
 def main(git_repo, mainline_remote_name, stable_remote_name, debug=False):
-    stable_branches = kernel_sec.branch.get_live_stable_branches(
-        git_repo, stable_remote_name)
+    stable_branches = kernel_sec.branch.get_live_stable_branches()
     branches = stable_branches + ['mainline']
 
     update(git_repo, stable_remote_name)

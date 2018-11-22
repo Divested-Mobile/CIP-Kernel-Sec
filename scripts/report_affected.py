@@ -24,8 +24,7 @@ def main(git_repo, mainline_remote_name, stable_remote_name,
                         if name[0].isdigit() else name
                         for name in branch_names]
     else:
-        branch_names = kernel_sec.branch.get_live_stable_branches(
-                           git_repo, stable_remote_name)
+        branch_names = kernel_sec.branch.get_live_stable_branches()
         if not only_fixed_upstream:
             branch_names.append('mainline')
 

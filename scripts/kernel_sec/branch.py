@@ -5,8 +5,16 @@
 # for details.
 
 import io
+import os
 import re
 import subprocess
+import time
+import urllib.error
+import urllib.request
+import warnings
+
+import html5lib
+import yaml
 
 from . import version
 
@@ -44,31 +52,83 @@ def get_stable_branches(git_repo, remote_name='stable'):
     return branches
 
 
-def get_live_stable_branches(*args, **kwargs):
-    # TODO: Pull list of longterm branches from
-    # https://www.kernel.org/category/releases.html ?
-    # For now, err on the side of inclusion and only exclude known dead
-    # branches.
-    dead_branches = set((
-        'linux-2.6.11.y', 'linux-2.6.12.y', 'linux-2.6.13.y', 'linux-2.6.14.y',
-        'linux-2.6.15.y', 'linux-2.6.16.y', 'linux-2.6.17.y', 'linux-2.6.18.y',
-        'linux-2.6.19.y', 'linux-2.6.20.y', 'linux-2.6.21.y', 'linux-2.6.22.y',
-        'linux-2.6.23.y', 'linux-2.6.24.y', 'linux-2.6.25.y', 'linux-2.6.26.y',
-        'linux-2.6.27.y', 'linux-2.6.28.y', 'linux-2.6.29.y', 'linux-2.6.30.y',
-        'linux-2.6.31.y', 'linux-2.6.32.y', 'linux-2.6.33.y', 'linux-2.6.34.y',
-        'linux-2.6.35.y', 'linux-2.6.36.y', 'linux-2.6.37.y', 'linux-2.6.38.y',
-        'linux-2.6.39.y', 'linux-3.0.y', 'linux-3.1.y', 'linux-3.2.y',
-        'linux-3.3.y', 'linux-3.4.y', 'linux-3.5.y', 'linux-3.6.y',
-        'linux-3.7.y', 'linux-3.8.y', 'linux-3.9.y', 'linux-3.10.y',
-        'linux-3.11.y', 'linux-3.12.y', 'linux-3.13.y', 'linux-3.14.y',
-        'linux-3.15.y', 'linux-3.17.y', 'linux-3.19.y', 'linux-4.0.y',
-        'linux-4.1.y', 'linux-4.2.y', 'linux-4.3.y', 'linux-4.5.y',
-        'linux-4.6.y', 'linux-4.7.y', 'linux-4.8.y', 'linux-4.10.y',
-        'linux-4.11.y', 'linux-4.12.y', 'linux-4.13.y', 'linux-4.15.y',
-        'linux-4.16.y', 'linux-4.17.y'))
+def _extract_live_stable_branches(doc):
+    xhtml_ns = 'http://www.w3.org/1999/xhtml'
+    ns = {'html': xhtml_ns}
+    cell_tags = ['{%s}td' % xhtml_ns, '{%s}th' % xhtml_ns]
 
-    return [branch_name for branch_name in get_stable_branches(*args, **kwargs)
-            if branch_name not in dead_branches]
+    tables = doc.findall(".//html:table[@id='releases']", ns)
+    if len(tables) == 0:
+        raise ValueError('no releases table found')
+    if len(tables) > 1:
+        raise ValueError('multiple releases tables found')
+
+    branches = []
+
+    for row in tables[0].findall(".//html:tr", ns):
+        row_text = []
+
+        # Get text of each cell in the row
+        for cell in row:
+            if cell.tag not in cell_tags:
+                raise ValueError('unexpected element %s found in releases' %
+                                 cell.tag)
+            row_text.append("".join(cell.itertext()))
+
+        # Extract branch type, current version, EOL flag
+        branch_type, version, eol = None, None, None
+        if len(row_text) >= 2:
+            branch_type = row_text[0].rstrip(':')
+            match = re.match(r'([^ ]+)( \[EOL\])?$', row_text[1])
+            if match:
+                version = match.group(1)
+                eol = match.group(2) is not None
+        if branch_type not in ['mainline', 'stable', 'longterm', 'linux-next'] \
+           or version is None:
+            raise ValueError('failed to parse releases row text %r' % row_text)
+
+        # Filter out irrelevant branches
+        if branch_type not in ['stable', 'longterm'] or eol:
+            continue
+
+        # Convert current version to branch name
+        match = re.match(r'(\d+\.\d+)\.\d+$', version)
+        if not match:
+            raise ValueError('failed to parse stable version %r' % version)
+
+        branches.append('linux-%s.y' % match.group(1))
+
+    return branches
+
+
+def get_live_stable_branches():
+    try:
+        with open('import/branches.yml') as f:
+            branches = yaml.safe_load(f)
+            cache_time = os.stat(f.fileno()).st_mtime
+    except IOError:
+        branches = None
+        cache_time = None
+
+    # Use the cache if it's less than a day old
+    if cache_time and time.time() - cache_time < 86400:
+        return branches
+
+    # Try to fetch and parse releases table
+    try:
+        with urllib.request.urlopen('https://www.kernel.org') as resp:
+            doc = html5lib.parse(resp.read())
+        branches = _extract_live_stable_branches(doc)
+    except (urllib.error.URLError, ValueError) as e:
+        # If we have a cached version, use it but warn
+        if branches:
+            warnings.warn(str(e), RuntimeWarning)
+            return branches
+        raise
+
+    with open('import/branches.yml', 'w') as f:
+        yaml.safe_dump(branches, f)
+    return branches
 
 
 def get_sort_key(branch):

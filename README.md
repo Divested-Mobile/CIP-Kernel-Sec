@@ -14,8 +14,8 @@ The schema is roughly documented in
 
 Various scripts, written in Python 3, are in the `scripts`
 subdirectory.  Supporting modules are in the `kernel_sec` subdirectory
-beneath that.  They require PyYAML (packaged in Debian as
-python3-yaml).
+beneath that.  They require PyYAML and html5lib (packaged in Debian as
+python3-yaml and python3-html5lib).
 
 * `scripts/import_debian.py` - import information from Debian's
 `kernel_sec` project.  It includes all issues that Debian considers
