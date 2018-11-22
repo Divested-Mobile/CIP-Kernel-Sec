@@ -31,27 +31,6 @@ def get_stable_branch_base_ver(branch_name):
     return match and match.group(1)
 
 
-def get_stable_branches(git_repo, remote_name='stable'):
-    branches = []
-
-    branch_text = str(
-        subprocess.check_output(
-            ['git', 'branch', '--list', '-r', '--no-color', '--column=never',
-             remote_name + '/*'],
-            cwd=git_repo),
-        encoding='utf-8', errors='strict')
-    branch_prefix = remote_name + '/'
-
-    for branch_name in branch_text.strip().split():
-        assert branch_name.startswith(branch_prefix)
-        branch_name = branch_name[len(branch_prefix):]
-
-        if get_stable_branch_base_ver(branch_name):
-            branches.append(branch_name)
-
-    return branches
-
-
 def _extract_live_stable_branches(doc):
     xhtml_ns = 'http://www.w3.org/1999/xhtml'
     ns = {'html': xhtml_ns}
