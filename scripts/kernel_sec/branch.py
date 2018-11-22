@@ -1,4 +1,4 @@
-# Copyright 2017 Codethink Ltd.
+# Copyright 2017-2018 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
