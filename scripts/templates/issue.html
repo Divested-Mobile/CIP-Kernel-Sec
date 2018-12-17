@@ -89,7 +89,7 @@
       {% endif %}
       {% else %}
       {% if issue.ignore and (issue.ignore.all or issue.ignore[name]) %}
-      <span class="ignored">ignored</span>
+      <span class="ignored">ignored</span> ({{ issue.ignore.all or issue.ignore[name] }})
       {% else %}
       <span class="bad">vulnerable</span>
       {% endif %}
