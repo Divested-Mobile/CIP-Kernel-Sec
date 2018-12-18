@@ -48,6 +48,6 @@ in Debian as python3-cherrypy3 and python3-jinja2).
 
 If you have better information about any issue, or additional
 unfixed issues, or improvements to the scripts, please send a
-pull request.
+merge request.
 
 Note the license information in the [COPYING](COPYING) file.
