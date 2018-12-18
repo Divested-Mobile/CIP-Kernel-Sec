@@ -295,9 +295,9 @@ def save(cve_id, issue):
 _cve_id_arbdig_re = re.compile(r'-(\d+)$')
 
 
-# Pad "arbitrary digits" to 6 digits so string comparison works
+# Pad "arbitrary digits" to 7 digits so string comparison works
 def get_id_sort_key(cve_id):
-    return _cve_id_arbdig_re.sub(lambda m: '-%06d' % int(m.group(1)), cve_id)
+    return _cve_id_arbdig_re.sub(lambda m: '-%07d' % int(m.group(1)), cve_id)
 
 
 def affects_branch(issue, branch, is_commit_in_branch):
