@@ -17,6 +17,11 @@ subdirectory.  Supporting modules are in the `kernel_sec` subdirectory
 beneath that.  They require PyYAML and html5lib (packaged in Debian as
 python3-yaml and python3-html5lib).
 
+Many scripts require access to a kernel git repository.  By default
+this is assumed to be in `../kernel`, with remotes named `torvalds`
+and `stable` for the mainline and stable repositories.  These can
+be overridden by command-line options.
+
 * `scripts/import_debian.py` - import information from Debian's
 `kernel_sec` project.  It includes all issues that Debian considers
 active or that are already tracked here.
