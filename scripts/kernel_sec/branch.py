@@ -105,6 +105,7 @@ def get_live_stable_branches():
             return branches
         raise
 
+    os.makedirs('import', 0o777, exist_ok=True)
     with open('import/branches.yml', 'w') as f:
         yaml.safe_dump(branches, f)
     return branches
