@@ -265,12 +265,12 @@ _IssueLoader.add_constructor('tag:yaml.org,2002:timestamp',
 
 
 def load_filename(name):
-    with open(name) as f:
+    with open(name, 'r', encoding='utf-8') as f:
         return yaml.load(f, Loader=_IssueLoader)
 
 
 def save_filename(name, issue):
-    with open(name, 'w') as f:
+    with open(name, 'w', encoding='utf-8') as f:
         yaml.dump(issue, f, Dumper=_IssueDumper)
 
 
