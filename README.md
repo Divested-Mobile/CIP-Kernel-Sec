@@ -31,7 +31,6 @@ active or that are already tracked here.
 marked as affecting the 'linux' package and don't have the word
 'Android' in the description, and that are either dated from the
 current or previous year or that are already tracked here.
-It requires Bazaar-NG (bzr) to be installed and configured.
 
 * `scripts/import_stable.py` - import information about backports
 to stable by reading the git commit logs.

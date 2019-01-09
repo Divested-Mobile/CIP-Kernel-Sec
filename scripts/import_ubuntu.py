@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # Copyright 2005-2011 Canonical Ltd.
-# Copyright 2017 Codethink Ltd.
+# Copyright 2017-2019 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
@@ -16,6 +16,7 @@ import glob
 import os
 import os.path
 import re
+import shutil
 import subprocess
 import sys
 
@@ -272,6 +273,10 @@ def get_recent_issues():
 
 
 def main():
+    # Remove obsolete Bazaar-NG repository
+    if os.path.isdir(IMPORT_DIR + '/.bzr'):
+        shutil.rmtree(IMPORT_DIR)
+
     os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
     if os.path.isdir(IMPORT_DIR + '/.git'):
         subprocess.check_call(['git', 'pull'], cwd=IMPORT_DIR)
