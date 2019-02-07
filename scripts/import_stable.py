@@ -23,6 +23,7 @@ BACKPORT_COMMIT_TOP_RE = re.compile(
     r'^(?:' r'commit ({hash})(?: upstream\.?)?'
     r'|'    r'\[ [Uu]pstream commit ({hash}) \]'
     r'|'    r'\(cherry[- ]picked from commit ({hash})\)'
+    r'|'    r'\[ commit ({hash}) upstream \]'
     r')$'
     .format(**RE_USE))
 BACKPORT_COMMIT_BOTTOM_RE = re.compile(
