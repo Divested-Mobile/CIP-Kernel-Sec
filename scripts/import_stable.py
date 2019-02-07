@@ -18,16 +18,16 @@ import kernel_sec.branch
 import kernel_sec.issue
 
 
-COMMIT_HASH_RE = r'[0-9a-f]{40}'
+RE_USE = {'hash': r'[0-9a-f]{40}'}
 BACKPORT_COMMIT_TOP_RE = re.compile(
-    r'^(?:' r'commit (%s)(?: upstream\.?)?'
-    r'|'    r'\[ [Uu]pstream commit (%s) \]'
-    r'|'    r'\(cherry[- ]picked from commit (%s)\)'
+    r'^(?:' r'commit ({hash})(?: upstream\.?)?'
+    r'|'    r'\[ [Uu]pstream commit ({hash}) \]'
+    r'|'    r'\(cherry[- ]picked from commit ({hash})\)'
     r')$'
-    % (COMMIT_HASH_RE, COMMIT_HASH_RE, COMMIT_HASH_RE))
+    .format(**RE_USE))
 BACKPORT_COMMIT_BOTTOM_RE = re.compile(
-    r'^\(cherry[- ]picked from commit (%s)\)$'
-    % COMMIT_HASH_RE)
+    r'^\(cherry[- ]picked from commit ({hash})\)$'
+    .format(**RE_USE))
 
 
 def update(git_repo, remote_name):
