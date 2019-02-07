@@ -36,7 +36,7 @@ def update(git_repo, remote_name):
                           cwd=git_repo)
 
 
-def get_backports(git_repo, remote_name, branches):
+def get_backports(git_repo, remote_name, branches, debug=False):
     backports = {}
 
     for branch_name in branches:
@@ -57,6 +57,9 @@ def get_backports(git_repo, remote_name, branches):
                 match = commit_re.match(line[1:])
                 if match:
                     mainline_commit = ''.join(match.groups(''))
+                    if debug:
+                        print('%s: %s is backport of %s'
+                              % (branch_name, stable_commit, mainline_commit))
                     backports.setdefault(mainline_commit, {})[branch_name] \
                         = stable_commit
                 if line.strip() != '':
@@ -127,7 +130,7 @@ def main(git_repo, mainline_remote_name, stable_remote_name, debug=False):
     branches = stable_branches + ['mainline']
 
     update(git_repo, stable_remote_name)
-    backports = get_backports(git_repo, stable_remote_name, stable_branches)
+    backports = get_backports(git_repo, stable_remote_name, stable_branches, debug)
     c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, mainline_remote_name,
                                                 branches)
 
