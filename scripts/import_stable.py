@@ -55,8 +55,7 @@ def get_backports(git_repo, remote_name, branches):
             else:
                 match = commit_re.match(line[1:])
                 if match:
-                    mainline_commit = match.group(1) or match.group(2) \
-                                      or match.group(3)
+                    mainline_commit = ''.join(match.groups(''))
                     backports.setdefault(mainline_commit, {})[branch_name] \
                         = stable_commit
                 if line.strip() != '':
