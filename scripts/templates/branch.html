@@ -4,7 +4,7 @@
 <ul>
   {% for cve_id, issue in issues %}
   <li class="{% if issue.ignore and (issue.ignore.all or issue.ignore[name]) %}ignored{% endif %}">
-    <a href="/issues/{{ cve_id }}/">{{ cve_id }}</a> -
+    <a href="/issue/{{ cve_id }}/">{{ cve_id }}</a> -
     {{ issue.description|truncate(100) }}
   </li>
   {% endfor %}
