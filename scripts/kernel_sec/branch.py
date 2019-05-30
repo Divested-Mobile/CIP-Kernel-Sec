@@ -23,12 +23,18 @@ _STABLE_BRANCH_RE = re.compile(r'^linux-([\d.]+)\.y$')
 
 
 def get_base_ver_stable_branch(base_ver):
-    return 'linux-%s.y' % base_ver
+    branch_name = 'linux-%s.y' % base_ver
+    return {
+        'short_name': branch_name,
+        'git_remote': 'stable',
+        'git_name': branch_name,
+        'base_ver': base_ver
+        }
 
 
-def get_stable_branch_base_ver(branch_name):
+def get_stable_branch(branch_name):
     match = _STABLE_BRANCH_RE.match(branch_name)
-    return match and match.group(1)
+    return match and get_base_ver_stable_branch(match.group(1))
 
 
 def _extract_live_stable_branches(doc):
@@ -70,19 +76,19 @@ def _extract_live_stable_branches(doc):
         if branch_type not in ['stable', 'longterm'] or eol:
             continue
 
-        # Convert current version to branch name
+        # Convert current version to base version
         match = re.match(r'(\d+\.\d+)\.\d+$', version)
         if not match:
             raise ValueError('failed to parse stable version %r' % version)
 
-        branches.append('linux-%s.y' % match.group(1))
+        branches.append(get_base_ver_stable_branch(match.group(1)))
 
     return branches
 
 
-def get_live_stable_branches():
+def _get_live_stable_branches():
     try:
-        with open('import/branches.yml') as f:
+        with open('import/stable_branches.yml') as f:
             branches = yaml.safe_load(f)
             cache_time = os.stat(f.fileno()).st_mtime
     except IOError:
@@ -106,16 +112,26 @@ def get_live_stable_branches():
         raise
 
     os.makedirs('import', 0o777, exist_ok=True)
-    with open('import/branches.yml', 'w') as f:
+    with open('import/stable_branches.yml', 'w') as f:
         yaml.safe_dump(branches, f)
     return branches
 
 
+def get_live_branches():
+    branches = _get_live_stable_branches()
+    branches.append({
+        'short_name': 'mainline',
+        'git_remote': 'torvalds',
+        'git_name': 'master'
+        })
+    return branches
+
+
 def get_sort_key(branch):
-    if branch == 'mainline':
+    try:
+        base_ver = branch['base_ver']
+    except KeyError:
         return [1000000]
-    base_ver = get_stable_branch_base_ver(branch)
-    assert base_ver is not None
     return version.get_sort_key(base_ver)
 
 
@@ -132,29 +148,31 @@ def _get_commits(git_repo, end, start=None):
 
 
 class CommitBranchMap:
-    def __init__(self, git_repo, remote_map, branch_names):
+    def __init__(self, git_repo, remote_map, branches):
         # Generate sort key for each branch
         self._branch_sort_key = {
-            branch: get_sort_key(branch) for branch in branch_names
+            branch['short_name']: get_sort_key(branch) for branch in branches
         }
 
         # Generate sort key for each commit
         self._commit_sort_key = {}
         start = None
-        for branch in sorted(branch_names, key=get_sort_key):
-            if branch == 'mainline':
-                end = '%s/master' % remote_map['torvalds']
+        for branch in sorted(branches, key=get_sort_key):
+            branch_name = branch['short_name']
+            if branch_name == 'mainline':
+                end = '%s/%s' % (remote_map[branch['git_remote']],
+                                 branch['git_name'])
             else:
-                base_ver = get_stable_branch_base_ver(branch)
-                assert base_ver is not None
-                end = 'v' + base_ver
+                end = 'v' + branch['base_ver']
             for commit in _get_commits(git_repo, end, start):
-                self._commit_sort_key[commit] = self._branch_sort_key[branch]
+                self._commit_sort_key[commit] \
+                    = self._branch_sort_key[branch_name]
             start = end
 
     def is_commit_in_branch(self, commit, branch):
+        branch_name = branch['short_name']
         return commit in self._commit_sort_key and \
-            self._commit_sort_key[commit] <= self._branch_sort_key[branch]
+            self._commit_sort_key[commit] <= self._branch_sort_key[branch_name]
 
 
 class RemoteMap(dict):

@@ -39,13 +39,18 @@ def update(git_repo, remote_name):
 def get_backports(git_repo, remote_map, branches, debug=False):
     backports = {}
 
-    for branch_name in branches:
-        base_ver = kernel_sec.branch.get_stable_branch_base_ver(branch_name)
+    for branch in branches:
+        branch_name = branch['short_name']
+        if branch_name == 'mainline':
+            continue
+
+        base_ver = branch['base_ver']
         log_proc = subprocess.Popen(
             # Format with hash on one line, body on following lines indented
             # by 1
             ['git', 'log', '--no-notes', '--pretty=%H%n%w(0,1,1)%b',
-             'v%s..%s/%s' % (base_ver, remote_map['stable'], branch_name)],
+             'v%s..%s/%s'
+             % (base_ver, remote_map[branch['git_remote']], branch['git_name'])],
             cwd=git_repo, stdout=subprocess.PIPE)
 
         for line in io.TextIOWrapper(log_proc.stdout, encoding='utf-8',
@@ -79,7 +84,11 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
 
     changed = False
 
-    for branch_name in branches:
+    for branch in branches:
+        branch_name = branch['short_name']
+        if branch_name == 'mainline':
+            continue
+
         # Don't replace a non-empty field
         if issue_commits.get(branch_name):
             if debug_context:
@@ -89,7 +98,7 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
         branch_commits = []
         for commit in mainline_commits:
             # Was this commit included before the branch point?
-            if c_b_map.is_commit_in_branch(commit, branch_name):
+            if c_b_map.is_commit_in_branch(commit, branch):
                 if debug_context:
                     print('%s/%s: includes %s' %
                           (debug_context, branch_name, commit))
@@ -126,11 +135,13 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
 
 
 def main(git_repo, remote_map, debug=False):
-    stable_branches = kernel_sec.branch.get_live_stable_branches()
-    branches = stable_branches + ['mainline']
+    branches = kernel_sec.branch.get_live_branches()
+    remote_names = set(branch['git_remote'] for branch in branches
+                       if branch['short_name'] != 'mainline')
 
-    update(git_repo, remote_map['stable'])
-    backports = get_backports(git_repo, remote_map, stable_branches, debug)
+    for remote_name in remote_names:
+        update(git_repo, remote_map[remote_name])
+    backports = get_backports(git_repo, remote_map, branches, debug)
     c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remote_map, branches)
 
     issues = set(kernel_sec.issue.get_list())
@@ -144,7 +155,7 @@ def main(git_repo, remote_map, debug=False):
                 continue
             else:
                 debug_context = '%s/%s' % (cve_id, name) if debug else None
-                changed |= add_backports(stable_branches, c_b_map,
+                changed |= add_backports(branches, c_b_map,
                                          commits, backports,
                                          debug_context=debug_context)
         if changed:

@@ -20,18 +20,20 @@ def main(git_repo, remote_map,
          only_fixed_upstream, include_ignored, *branch_names):
     if branch_names:
         # Support stable release strings as shorthand for stable branches
-        branch_names = [kernel_sec.branch.get_base_ver_stable_branch(name)
-                        if name[0].isdigit() else name
-                        for name in branch_names]
+        branches = [kernel_sec.branch.get_base_ver_stable_branch(name)
+                    if name[0].isdigit()
+                    else kernel_sec.branch.get_stable_branch(name)
+                    for name in branch_names]
     else:
-        branch_names = kernel_sec.branch.get_live_stable_branches()
-        if not only_fixed_upstream:
-            branch_names.append('mainline')
+        branches = kernel_sec.branch.get_live_branches()
+        if only_fixed_upstream:
+            branches = [branch for branch in branches
+                        if branch['short_name'] != 'mainline']
 
-    branch_names.sort(key=kernel_sec.branch.get_sort_key)
+    branches.sort(key=kernel_sec.branch.get_sort_key)
 
     c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remote_map,
-                                                branch_names)
+                                                branches)
 
     branch_issues = {}
     issues = set(kernel_sec.issue.get_list())
@@ -46,18 +48,22 @@ def main(git_repo, remote_map,
            (only_fixed_upstream and fixed.get('mainline', 'never') == 'never'):
             continue
 
-        for branch in branch_names:
+        for branch in branches:
+            branch_name = branch['short_name']
+
             # Should this issue be ignored for this branch?
-            if not include_ignored and ignore.get(branch):
+            if not include_ignored and ignore.get(branch_name):
                 continue
 
             if kernel_sec.issue.affects_branch(
                     issue, branch, c_b_map.is_commit_in_branch):
-                branch_issues.setdefault(branch, []).append(cve_id)
+                branch_issues.setdefault(branch_name, []).append(cve_id)
 
-    for branch in branch_names:
-        print('%s:' % branch, *sorted(branch_issues.get(branch, []),
-                                      key=kernel_sec.issue.get_id_sort_key))
+    for branch in branches:
+        branch_name = branch['short_name']
+        print('%s:' % branch_name,
+              *sorted(branch_issues.get(branch_name, []),
+                      key=kernel_sec.issue.get_id_sort_key))
 
 
 if __name__ == '__main__':

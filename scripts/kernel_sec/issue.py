@@ -301,14 +301,16 @@ def get_id_sort_key(cve_id):
 
 
 def affects_branch(issue, branch, is_commit_in_branch):
+    branch_name = branch['short_name']
+
     # If it was not introduced on this branch, and was introduced on
     # mainline after the branch point, branch is not affected
     introduced = issue.get('introduced-by')
     if introduced:
         if introduced.get('mainline') == 'never' and \
-           (branch == 'mainline' or branch not in introduced):
+           (branch_name == 'mainline' or branch_name not in introduced):
             return False
-        if branch not in introduced:
+        if branch_name not in introduced:
             for commit in introduced['mainline']:
                 if is_commit_in_branch(commit, branch):
                     break
@@ -319,7 +321,7 @@ def affects_branch(issue, branch, is_commit_in_branch):
     # the branch point, branch is not affected
     fixed = issue.get('fixed-by', {})
     if fixed:
-        if fixed.get(branch, 'never') != 'never':
+        if fixed.get(branch_name, 'never') != 'never':
             return False
         if fixed.get('mainline', 'never') != 'never':
             for commit in fixed['mainline']:

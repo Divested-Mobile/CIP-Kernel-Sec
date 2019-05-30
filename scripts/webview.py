@@ -92,7 +92,8 @@ class Branch:
                 for cve_id in sorted(_issue_cache.keys(),
                                      key=kernel_sec.issue.get_id_sort_key)
                 if kernel_sec.issue.affects_branch(
-                        _issue_cache[cve_id], self._name,
+                        _issue_cache[cve_id],
+                        self._root.branch_defs[self._name],
                         self._root.is_commit_in_branch)
             ])
 
@@ -127,10 +128,11 @@ class Issue:
             cve_id=self._cve_id,
             issue=issue,
             branches=[
-                (name,
+                (branch_name,
                  kernel_sec.issue.affects_branch(
-                     issue, name, self._root.is_commit_in_branch))
-                for name in self._root.branch_names
+                     issue, self._root.branch_defs[branch_name],
+                     self._root.is_commit_in_branch))
+                for branch_name in self._root.branch_names
             ])
 
 
@@ -159,12 +161,18 @@ class Root:
     _template = _template_env.get_template('root.html')
 
     def __init__(self, git_repo, remote_map):
-        self.branch_names = kernel_sec.branch.get_live_stable_branches()
-        self.branch_names.append('mainline')
-        self.branch_names.sort(key=kernel_sec.branch.get_sort_key)
+        branch_defs = kernel_sec.branch.get_live_branches()
+        self.branch_names = [
+            branch['short_name']
+            for branch in sorted(branch_defs,
+                                 key=kernel_sec.branch.get_sort_key)
+        ]
+        self.branch_defs = {
+            branch['short_name']: branch for branch in branch_defs
+        }
 
         c_b_map = kernel_sec.branch.CommitBranchMap(
-            git_repo, remote_map, self.branch_names)
+            git_repo, remote_map, branch_defs)
         self.is_commit_in_branch = c_b_map.is_commit_in_branch
 
         self.branches = Branches(self)
