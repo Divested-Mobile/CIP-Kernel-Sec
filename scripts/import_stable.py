@@ -36,7 +36,7 @@ def update(git_repo, remote_name):
                           cwd=git_repo)
 
 
-def get_backports(git_repo, remote_name, branches, debug=False):
+def get_backports(git_repo, remote_map, branches, debug=False):
     backports = {}
 
     for branch_name in branches:
@@ -45,7 +45,7 @@ def get_backports(git_repo, remote_name, branches, debug=False):
             # Format with hash on one line, body on following lines indented
             # by 1
             ['git', 'log', '--no-notes', '--pretty=%H%n%w(0,1,1)%b',
-             'v%s..%s/%s' % (base_ver, remote_name, branch_name)],
+             'v%s..%s/%s' % (base_ver, remote_map['stable'], branch_name)],
             cwd=git_repo, stdout=subprocess.PIPE)
 
         for line in io.TextIOWrapper(log_proc.stdout, encoding='utf-8',
@@ -125,14 +125,13 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
     return changed
 
 
-def main(git_repo, mainline_remote_name, stable_remote_name, debug=False):
+def main(git_repo, remote_map, debug=False):
     stable_branches = kernel_sec.branch.get_live_stable_branches()
     branches = stable_branches + ['mainline']
 
-    update(git_repo, stable_remote_name)
-    backports = get_backports(git_repo, stable_remote_name, stable_branches, debug)
-    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, mainline_remote_name,
-                                                branches)
+    update(git_repo, remote_map['stable'])
+    backports = get_backports(git_repo, remote_map, stable_branches, debug)
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remote_map, branches)
 
     issues = set(kernel_sec.issue.get_list())
     for cve_id in issues:
@@ -161,18 +160,24 @@ if __name__ == '__main__':
                         help=('git repository from which to read commit logs '
                               '(default: ../kernel)'),
                         metavar='DIRECTORY')
+    parser.add_argument('--remote-name',
+                        dest='remote_name', action='append', default=[],
+                        help='git remote name mappings, e.g. stable:korg-stable',
+                        metavar='NAME=OTHER-NAME')
     parser.add_argument('--mainline-remote',
-                        dest='mainline_remote_name', default='torvalds',
-                        help='git remote for mainline (default: torvalds)',
-                        metavar='NAME')
+                        dest='mainline_remote_name',
+                        help="git remote name to use instead of 'torvalds'",
+                        metavar='OTHER-NAME')
     parser.add_argument('--stable-remote',
-                        dest='stable_remote_name', default='stable',
-                        help=('git remote for stable branches '
-                              '(default: stable)'),
-                        metavar='NAME')
+                        dest='stable_remote_name',
+                        help="git remote name to use instead of 'stable'",
+                        metavar='OTHER-NAME')
     parser.add_argument('--debug',
                         dest='debug', action='store_true',
                         help='enable debugging output')
     args = parser.parse_args()
-    main(args.git_repo, args.mainline_remote_name, args.stable_remote_name,
-         args.debug)
+    remote_map = kernel_sec.branch.make_remote_map(
+        args.remote_name,
+        mainline=args.mainline_remote_name,
+        stable=args.stable_remote_name)
+    main(args.git_repo, remote_map, args.debug)

@@ -158,13 +158,13 @@ class Issues:
 class Root:
     _template = _template_env.get_template('root.html')
 
-    def __init__(self, git_repo, mainline_remote_name, stable_remote_name):
+    def __init__(self, git_repo, remote_map):
         self.branch_names = kernel_sec.branch.get_live_stable_branches()
         self.branch_names.append('mainline')
         self.branch_names.sort(key=kernel_sec.branch.get_sort_key)
 
         c_b_map = kernel_sec.branch.CommitBranchMap(
-            git_repo, mainline_remote_name, self.branch_names)
+            git_repo, remote_map, self.branch_names)
         self.is_commit_in_branch = c_b_map.is_commit_in_branch
 
         self.branches = Branches(self)
@@ -192,16 +192,23 @@ if __name__ == '__main__':
                         help=('git repository from which to read commit logs '
                               '(default: ../kernel)'),
                         metavar='DIRECTORY')
+    parser.add_argument('--remote-name',
+                        dest='remote_name', action='append', default=[],
+                        help='git remote name mappings, e.g. stable:korg-stable',
+                        metavar='NAME=OTHER-NAME')
     parser.add_argument('--mainline-remote',
-                        dest='mainline_remote_name', default='torvalds',
-                        help='git remote for mainline (default: torvalds)',
-                        metavar='NAME')
+                        dest='mainline_remote_name',
+                        help="git remote name to use instead of 'torvalds'",
+                        metavar='OTHER-NAME')
     parser.add_argument('--stable-remote',
-                        dest='stable_remote_name', default='stable',
-                        help=('git remote for stable branches '
-                              '(default: stable)'),
-                        metavar='NAME')
+                        dest='stable_remote_name',
+                        help="git remote name to use instead of 'stable'",
+                        metavar='OTHER-NAME')
     args = parser.parse_args()
+    remote_map = kernel_sec.branch.make_remote_map(
+        args.remote_name,
+        mainline=args.mainline_remote_name,
+        stable=args.stable_remote_name)
 
     conf = {
         '/static/style.css': {
@@ -211,7 +218,6 @@ if __name__ == '__main__':
         }
     }
 
-    cherrypy.quickstart(Root(args.git_repo, args.mainline_remote_name,
-                             args.stable_remote_name),
+    cherrypy.quickstart(Root(args.git_repo, remote_map),
                         '/',
                         conf)
