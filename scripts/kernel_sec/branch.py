@@ -117,8 +117,17 @@ def _get_live_stable_branches():
     return branches
 
 
+def _get_configured_branches():
+    try:
+        with open('conf/branches.yml') as f:
+            return yaml.safe_load(f)
+    except IOError:
+        pass
+
+
 def get_live_branches():
     branches = _get_live_stable_branches()
+    branches.extend(_get_configured_branches())
     branches.append({
         'short_name': 'mainline',
         'git_remote': 'torvalds',
