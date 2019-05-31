@@ -193,9 +193,18 @@ class RemoteMap(dict):
         return value
 
 
-# Create a RemoteMap based on command-line arguments
+def _get_configured_remotes():
+    try:
+        with open('conf/remotes.yml') as f:
+            return yaml.safe_load(f)
+    except IOError:
+        return {}
+
+
+# Create a RemoteMap based on config and command-line arguments
 def get_remotes(mappings, mainline=None, stable=None):
     remotes = RemoteMap()
+    remotes.update(_get_configured_remotes())
     for mapping in mappings:
         left, right = arg.split(':', 1)
         remotes[left]['git_name'] = right
