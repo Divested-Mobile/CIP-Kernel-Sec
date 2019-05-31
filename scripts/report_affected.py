@@ -16,7 +16,7 @@ import kernel_sec.issue
 import kernel_sec.version
 
 
-def main(git_repo, remote_map,
+def main(git_repo, remotes,
          only_fixed_upstream, include_ignored, *branch_names):
     if branch_names:
         # Support stable release strings as shorthand for stable branches
@@ -32,8 +32,7 @@ def main(git_repo, remote_map,
 
     branches.sort(key=kernel_sec.branch.get_sort_key)
 
-    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remote_map,
-                                                branches)
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remotes, branches)
 
     branch_issues = {}
     issues = set(kernel_sec.issue.get_list())
@@ -98,9 +97,8 @@ if __name__ == '__main__':
                               '(default: all active branches)'),
                         metavar='BRANCH')
     args = parser.parse_args()
-    remote_map = kernel_sec.branch.make_remote_map(
-        args.remote_name,
-        mainline=args.mainline_remote_name,
-        stable=args.stable_remote_name)
-    main(args.git_repo, remote_map,
+    remotes = kernel_sec.branch.get_remotes(args.remote_name,
+                                            mainline=args.mainline_remote_name,
+                                            stable=args.stable_remote_name)
+    main(args.git_repo, remotes,
          args.only_fixed_upstream, args.include_ignored, *args.branches)

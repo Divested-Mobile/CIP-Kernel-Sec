@@ -36,7 +36,7 @@ def update(git_repo, remote_name):
                           cwd=git_repo)
 
 
-def get_backports(git_repo, remote_map, branches, debug=False):
+def get_backports(git_repo, remotes, branches, debug=False):
     backports = {}
 
     for branch in branches:
@@ -50,7 +50,8 @@ def get_backports(git_repo, remote_map, branches, debug=False):
             # by 1
             ['git', 'log', '--no-notes', '--pretty=%H%n%w(0,1,1)%b',
              'v%s..%s/%s'
-             % (base_ver, remote_map[branch['git_remote']], branch['git_name'])],
+             % (base_ver, remotes[branch['git_remote']]['git_name'],
+                branch['git_name'])],
             cwd=git_repo, stdout=subprocess.PIPE)
 
         for line in io.TextIOWrapper(log_proc.stdout, encoding='utf-8',
@@ -134,15 +135,15 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
     return changed
 
 
-def main(git_repo, remote_map, debug=False):
+def main(git_repo, remotes, debug=False):
     branches = kernel_sec.branch.get_live_branches()
     remote_names = set(branch['git_remote'] for branch in branches
                        if branch['short_name'] != 'mainline')
 
     for remote_name in remote_names:
-        update(git_repo, remote_map[remote_name])
-    backports = get_backports(git_repo, remote_map, branches, debug)
-    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remote_map, branches)
+        update(git_repo, remotes[remote_name]['git_name'])
+    backports = get_backports(git_repo, remotes, branches, debug)
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remotes, branches)
 
     issues = set(kernel_sec.issue.get_list())
     for cve_id in issues:
@@ -187,8 +188,7 @@ if __name__ == '__main__':
                         dest='debug', action='store_true',
                         help='enable debugging output')
     args = parser.parse_args()
-    remote_map = kernel_sec.branch.make_remote_map(
-        args.remote_name,
-        mainline=args.mainline_remote_name,
-        stable=args.stable_remote_name)
-    main(args.git_repo, remote_map, args.debug)
+    remotes = kernel_sec.branch.get_remotes(args.remote_name,
+                                            mainline=args.mainline_remote_name,
+                                            stable=args.stable_remote_name)
+    main(args.git_repo, remotes, args.debug)

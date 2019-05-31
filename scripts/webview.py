@@ -160,7 +160,7 @@ class Issues:
 class Root:
     _template = _template_env.get_template('root.html')
 
-    def __init__(self, git_repo, remote_map):
+    def __init__(self, git_repo, remotes):
         branch_defs = kernel_sec.branch.get_live_branches()
         self.branch_names = [
             branch['short_name']
@@ -172,7 +172,7 @@ class Root:
         }
 
         c_b_map = kernel_sec.branch.CommitBranchMap(
-            git_repo, remote_map, branch_defs)
+            git_repo, remotes, branch_defs)
         self.is_commit_in_branch = c_b_map.is_commit_in_branch
 
         self.branches = Branches(self)
@@ -213,10 +213,9 @@ if __name__ == '__main__':
                         help="git remote name to use instead of 'stable'",
                         metavar='OTHER-NAME')
     args = parser.parse_args()
-    remote_map = kernel_sec.branch.make_remote_map(
-        args.remote_name,
-        mainline=args.mainline_remote_name,
-        stable=args.stable_remote_name)
+    remotes = kernel_sec.branch.get_remotes(args.remote_name,
+                                            mainline=args.mainline_remote_name,
+                                            stable=args.stable_remote_name)
 
     conf = {
         '/static/style.css': {
@@ -226,6 +225,6 @@ if __name__ == '__main__':
         }
     }
 
-    cherrypy.quickstart(Root(args.git_repo, remote_map),
+    cherrypy.quickstart(Root(args.git_repo, remotes),
                         '/',
                         conf)

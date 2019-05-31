@@ -157,7 +157,7 @@ def _get_commits(git_repo, end, start=None):
 
 
 class CommitBranchMap:
-    def __init__(self, git_repo, remote_map, branches):
+    def __init__(self, git_repo, remotes, branches):
         # Generate sort key for each branch
         self._branch_sort_key = {
             branch['short_name']: get_sort_key(branch) for branch in branches
@@ -169,7 +169,7 @@ class CommitBranchMap:
         for branch in sorted(branches, key=get_sort_key):
             branch_name = branch['short_name']
             if branch_name == 'mainline':
-                end = '%s/%s' % (remote_map[branch['git_remote']],
+                end = '%s/%s' % (remotes[branch['git_remote']]['git_name'],
                                  branch['git_name'])
             else:
                 end = 'v' + branch['base_ver']
@@ -187,20 +187,20 @@ class CommitBranchMap:
 class RemoteMap(dict):
     # Default to identity mapping for anything not explicitly mapped
     def __getitem__(self, key):
-        try:
-            return super().__getitem__(key)
-        except KeyError:
-            return key
+        value = self.setdefault(key, {})
+        if 'git_name' not in value:
+            value['git_name'] = key
+        return value
 
 
 # Create a RemoteMap based on command-line arguments
-def make_remote_map(mappings, mainline=None, stable=None):
-    remote_map = RemoteMap()
+def get_remotes(mappings, mainline=None, stable=None):
+    remotes = RemoteMap()
     for mapping in mappings:
         left, right = arg.split(':', 1)
-        remote_map[left] = right
+        remotes[left]['git_name'] = right
     if mainline:
-        remote_map['torvalds'] = mainline
+        remotes['torvalds']['git_name'] = mainline
     if stable:
-        remote_map['stable'] = stable
-    return remote_map
+        remotes['stable']['git_name'] = stable
+    return remotes
