@@ -75,6 +75,7 @@
     <th rowspan={{ branches|length }}>Status</th>
     {% for branch, affected in branches %}
     {% set name = branch.short_name %}
+    {% set url_prefix = remotes[branch.git_remote].commit_url_prefix %}
     <th>
       <a href="/branch/{{ name }}/">{{ name }}</a>
     </th>
@@ -83,7 +84,7 @@
       {% if issue['fixed-by'] and issue['fixed-by'][name] and issue['fixed-by'][name] != 'never' %}
       <span class="good">fixed</span> by
       {% for commit in issue['fixed-by'][name] %}
-      <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
+      <a href="{{ url_prefix }}{{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
       {% endfor %}
       {% else %}
       <span class="good">never affected</span>
@@ -97,7 +98,7 @@
       {% if issue['introduced-by'] and issue['introduced-by'][name] and issue['introduced-by'][name] != 'never' %}
       - introduced by
       {% for commit in issue['introduced-by'][name] %}
-      <a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit?id={{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
+      <a href="{{ url_prefix }}{{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
       {% endfor %}
       {% endif %}
       {% endif %}

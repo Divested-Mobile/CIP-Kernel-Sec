@@ -133,7 +133,8 @@ class Issue:
                      issue, self._root.branch_defs[branch_name],
                      self._root.is_commit_in_branch))
                 for branch_name in self._root.branch_names
-            ])
+            ],
+            remotes=self._root.remotes)
 
 
 class Issues:
@@ -161,6 +162,8 @@ class Root:
     _template = _template_env.get_template('root.html')
 
     def __init__(self, git_repo, remotes):
+        self.remotes = remotes
+
         branch_defs = kernel_sec.branch.get_live_branches()
         self.branch_names = [
             branch['short_name']
