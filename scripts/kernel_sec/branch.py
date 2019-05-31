@@ -122,7 +122,7 @@ def _get_configured_branches():
         with open('conf/branches.yml') as f:
             return yaml.safe_load(f)
     except IOError:
-        pass
+        return []
 
 
 def get_live_branches():
