@@ -73,7 +73,8 @@
   {% endif %}
   <tr>
     <th rowspan={{ branches|length }}>Status</th>
-    {% for name, affected in branches %}
+    {% for branch, affected in branches %}
+    {% set name = branch.short_name %}
     <th>
       <a href="/branch/{{ name }}/">{{ name }}</a>
     </th>

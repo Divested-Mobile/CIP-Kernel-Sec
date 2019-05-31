@@ -128,7 +128,7 @@ class Issue:
             cve_id=self._cve_id,
             issue=issue,
             branches=[
-                (branch_name,
+                (self._root.branch_defs[branch_name],
                  kernel_sec.issue.affects_branch(
                      issue, self._root.branch_defs[branch_name],
                      self._root.is_commit_in_branch))
