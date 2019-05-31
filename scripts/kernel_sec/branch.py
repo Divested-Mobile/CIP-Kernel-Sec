@@ -117,9 +117,9 @@ def _get_live_stable_branches():
     return branches
 
 
-def _get_configured_branches():
+def _get_configured_branches(filename):
     try:
-        with open('conf/branches.yml') as f:
+        with open(filename) as f:
             return yaml.safe_load(f)
     except IOError:
         return []
@@ -127,7 +127,10 @@ def _get_configured_branches():
 
 def get_live_branches():
     branches = _get_live_stable_branches()
-    branches.extend(_get_configured_branches())
+    branches.extend(_get_configured_branches('conf/branches.yml'))
+    branches.extend(
+        _get_configured_branches(
+            os.path.expanduser('~/.config/kernel-sec/branches.yml')))
     branches.append({
         'short_name': 'mainline',
         'git_remote': 'torvalds',
@@ -193,9 +196,9 @@ class RemoteMap(dict):
         return value
 
 
-def _get_configured_remotes():
+def _get_configured_remotes(filename):
     try:
-        with open('conf/remotes.yml') as f:
+        with open(filename) as f:
             return yaml.safe_load(f)
     except IOError:
         return {}
@@ -204,7 +207,10 @@ def _get_configured_remotes():
 # Create a RemoteMap based on config and command-line arguments
 def get_remotes(mappings, mainline=None, stable=None):
     remotes = RemoteMap()
-    remotes.update(_get_configured_remotes())
+    remotes.update(_get_configured_remotes('conf/remotes.yml'))
+    remotes.update(
+        _get_configured_branches(
+            os.path.expanduser('~/.config/kernel-sec/remotes.yml')))
     for mapping in mappings:
         left, right = arg.split(':', 1)
         remotes[left]['git_name'] = right
