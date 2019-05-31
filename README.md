@@ -49,6 +49,38 @@ files.  This should be run after hand-editing files to reduce
 branches and issues.  This requires CherryPy and Jinja2 (packaged
 in Debian as python3-cherrypy3 and python3-jinja2).
 
+## Configuration
+
+### Branches
+
+Mainline and official stable branches listed on www.kernel.org are
+tracked automatically.  Any additional branches must be configured
+specifically, either in `conf/branches.yml` or in
+`~/.config/kernel-sec/branches.yml`.  These files, if they exist,
+contain a sequence of entries, where each entry is a mapping with the
+keys:
+
+* `short_name`: Name used for the branch in issues and in the user
+  interface.
+* `git_name`: Default git remote name used for the branch.
+* `git_branch`: Git remote branch name.
+* `base_ver`: Stable version that the branch is based on, e.g.
+  "4.4". This needs to be quoted so that it's a string not a
+  number.
+
+### Remotes
+
+Remotes must be configured specifically, either in
+`conf/remotes.yml` or in `~/.config/kernel-sec/remotes.yml`.
+These files, if they exist, contain a mapping where the keys
+are default git remote names.  The values are also mappings,
+with the keys:
+
+* `commit_url_prefix`: URL prefix for browsing a commit on a
+  branch from this remote.
+* `git_name`: (optional) The name actually used for this git
+  remote, if it's different from the default.
+
 ## Contributions
 
 If you have better information about any issue, or additional
