@@ -1,7 +1,7 @@
 # kernel-sec - Linux kernel CVE tracker
 
 This project tracks the status of security issues, identified by CVE
-ID, in mainline and in stable branches.
+ID, in mainline, stable, and other configured branches.
 
 ## Issue format
 
@@ -20,7 +20,7 @@ python3-yaml and python3-html5lib).
 Many scripts require access to a kernel git repository.  By default
 this is assumed to be in `../kernel`, with remotes named `torvalds`
 and `stable` for the mainline and stable repositories.  These can
-be overridden by command-line options.
+be overridden by command-line options or by configuration.
 
 * `scripts/import_debian.py` - import information from Debian's
 `kernel_sec` project.  It includes all issues that Debian considers
@@ -32,8 +32,8 @@ marked as affecting the 'linux' package and don't have the word
 'Android' in the description, and that are either dated from the
 current or previous year or that are already tracked here.
 
-* `scripts/import_stable.py` - import information about backports
-to stable by reading the git commit logs.
+* `scripts/import_stable.py` - import information about backports to
+stable and other configured branches, by reading the git commit logs.
 
 * `scripts/report_affected.py` - report which issues affect the
 specified branches, or all active branches.
