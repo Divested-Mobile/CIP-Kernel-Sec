@@ -209,7 +209,7 @@ def get_remotes(mappings, mainline=None, stable=None):
     remotes = RemoteMap()
     remotes.update(_get_configured_remotes('conf/remotes.yml'))
     remotes.update(
-        _get_configured_branches(
+        _get_configured_remotes(
             os.path.expanduser('~/.config/kernel-sec/remotes.yml')))
     for mapping in mappings:
         left, right = arg.split(':', 1)
