@@ -137,8 +137,7 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
 
 def main(git_repo, remotes, debug=False):
     branches = kernel_sec.branch.get_live_branches()
-    remote_names = set(branch['git_remote'] for branch in branches
-                       if branch['short_name'] != 'mainline')
+    remote_names = set(branch['git_remote'] for branch in branches)
 
     for remote_name in remote_names:
         update(git_repo, remotes[remote_name]['git_name'])
