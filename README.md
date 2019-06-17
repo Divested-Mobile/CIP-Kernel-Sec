@@ -18,9 +18,10 @@ beneath that.  They require PyYAML and html5lib (packaged in Debian as
 python3-yaml and python3-html5lib).
 
 Many scripts require access to a kernel git repository.  By default
-this is assumed to be in `../kernel`, with remotes named `torvalds`
-and `stable` for the mainline and stable repositories.  These can
-be overridden by command-line options or by configuration.
+this is assumed to be in `../kernel`, with remotes configured in
+`conf/remotes.yml`, e.g. `torvalds`, `stable` and `cip` for the mainline,
+stable and cip repositories. These can be overridden by command-line options
+or configuration (`~/.config/kernel-sec/remotes.yml`).
 
 * `scripts/import_debian.py` - import information from Debian's
 `kernel_sec` project.  It includes all issues that Debian considers
