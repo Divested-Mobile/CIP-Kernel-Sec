@@ -212,7 +212,7 @@ def get_remotes(mappings, mainline=None, stable=None):
         _get_configured_remotes(
             os.path.expanduser('~/.config/kernel-sec/remotes.yml')))
     for mapping in mappings:
-        left, right = arg.split(':', 1)
+        left, right = mapping.split(':', 1)
         remotes[left]['git_name'] = right
     if mainline:
         remotes['torvalds']['git_name'] = mainline
