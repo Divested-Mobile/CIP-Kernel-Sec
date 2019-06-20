@@ -174,7 +174,7 @@ if __name__ == '__main__':
     parser.add_argument('--remote-name',
                         dest='remote_name', action='append', default=[],
                         help='git remote name mappings, e.g. stable:korg-stable',
-                        metavar='NAME=OTHER-NAME')
+                        metavar='NAME:OTHER-NAME')
     parser.add_argument('--mainline-remote',
                         dest='mainline_remote_name',
                         help="git remote name to use instead of 'torvalds'",
