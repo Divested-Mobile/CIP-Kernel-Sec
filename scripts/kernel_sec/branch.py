@@ -62,8 +62,8 @@ def _extract_live_stable_branches(doc):
             if match:
                 version = match.group(1)
                 eol = match.group(2) is not None
-        if branch_type not in ['mainline', 'stable', 'longterm', 'linux-next'] \
-           or version is None:
+        if branch_type not in ['mainline', 'stable', 'longterm',
+                               'linux-next'] or version is None:
             raise ValueError('failed to parse releases row text %r' % row_text)
 
         # Filter out irrelevant branches

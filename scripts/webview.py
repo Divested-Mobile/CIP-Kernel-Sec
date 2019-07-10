@@ -205,7 +205,7 @@ if __name__ == '__main__':
                         metavar='DIRECTORY')
     parser.add_argument('--remote-name',
                         dest='remote_name', action='append', default=[],
-                        help='git remote name mappings, e.g. stable:korg-stable',
+                        help='git remote name mappings, e.g. stable:mystable',
                         metavar='NAME:OTHER-NAME')
     parser.add_argument('--mainline-remote',
                         dest='mainline_remote_name',

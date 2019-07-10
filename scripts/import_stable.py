@@ -64,7 +64,8 @@ def get_backports(git_repo, remotes, branches, debug=False):
                     backports.setdefault(mainline_commit, {})[branch_name] \
                         = stable_commit
                 if line.strip() != '':
-                    commit_re = BACKPORT_COMMIT_BOTTOM_RE  # next line is not top
+                    # next line is not top
+                    commit_re = BACKPORT_COMMIT_BOTTOM_RE
 
     return backports
 
@@ -120,7 +121,8 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
                 if debug_context:
                     print('%s/%s: recording commits' %
                           (debug_context, branch_name))
-                issue_commits.setdefault(branch_name, []).extend(branch_commits)
+                issue_commits.setdefault(
+                    branch_name, []).extend(branch_commits)
                 changed = True
             else:
                 if debug_context:
@@ -169,7 +171,7 @@ if __name__ == '__main__':
                         metavar='DIRECTORY')
     parser.add_argument('--remote-name',
                         dest='remote_name', action='append', default=[],
-                        help='git remote name mappings, e.g. stable:korg-stable',
+                        help='git remote name mappings, e.g. stable:mystable',
                         metavar='NAME:OTHER-NAME')
     parser.add_argument('--mainline-remote',
                         dest='mainline_remote_name',
