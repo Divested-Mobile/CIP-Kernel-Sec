@@ -219,6 +219,7 @@ if __name__ == '__main__':
     remotes = kernel_sec.branch.get_remotes(args.remote_name,
                                             mainline=args.mainline_remote_name,
                                             stable=args.stable_remote_name)
+    kernel_sec.branch.check_git_repo(args.git_repo, remotes)
 
     conf = {
         '/static/style.css': {

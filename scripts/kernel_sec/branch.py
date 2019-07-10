@@ -4,10 +4,12 @@
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
 # for details.
 
+import argparse
 import io
 import os
 import re
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -219,3 +221,22 @@ def get_remotes(mappings, mainline=None, stable=None):
     if stable:
         remotes['stable']['git_name'] = stable
     return remotes
+
+
+def check_git_repo(git_repo, remotes):
+    if not os.path.isdir(git_repo):
+        msg = "directory %r not present" % git_repo
+        raise argparse.ArgumentError(None, msg)
+    # .git could be a regular file (worktrees) or a directory
+    if not os.path.exists(os.path.join(git_repo, '.git')):
+        msg = "directory %r is not a git repository" % git_repo
+        raise argparse.ArgumentError(None, msg)
+
+    current_remotes = subprocess.check_output(
+        ['git', 'remote', 'show'], cwd=git_repo).decode(
+            sys.stdout.encoding).strip().split('\n')
+    for key in remotes.keys():
+        remote = remotes[key]  # __getitem__ will add git_name
+        if remote['git_name'] not in current_remotes:
+            msg = "remote %r not in git repository" % remote['git_name']
+            raise argparse.ArgumentError(None, msg)
