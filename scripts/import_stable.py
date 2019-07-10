@@ -31,11 +31,6 @@ BACKPORT_COMMIT_BOTTOM_RE = re.compile(
     .format(**RE_USE))
 
 
-def update(git_repo, remote_name):
-    subprocess.check_call(['git', 'remote', 'update', remote_name],
-                          cwd=git_repo)
-
-
 def get_backports(git_repo, remotes, branches, debug=False):
     backports = {}
 
@@ -140,7 +135,8 @@ def main(git_repo, remotes, debug=False):
     remote_names = set(branch['git_remote'] for branch in branches)
 
     for remote_name in remote_names:
-        update(git_repo, remotes[remote_name]['git_name'])
+        kernel_sec.branch.remote_update(
+            git_repo, remotes[remote_name]['git_name'])
     backports = get_backports(git_repo, remotes, branches, debug)
     c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remotes, branches)
 

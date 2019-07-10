@@ -23,6 +23,10 @@ this is assumed to be in `../kernel`, with remotes configured in
 stable and cip repositories. These can be overridden by command-line options
 or configuration (`~/.config/kernel-sec/remotes.yml`).
 
+* `scripts/prepare_remotes.py` - creates the local git repository
+and adds all configured remotes. You may prefer to skip this script
+and configure the repository by hand.
+
 * `scripts/import_debian.py` - import information from Debian's
 `kernel_sec` project.  It includes all issues that Debian considers
 active or that are already tracked here.
@@ -81,6 +85,7 @@ with the keys:
   branch from this remote.
 * `git_name`: (optional) The name actually used for this git
   remote, if it's different from the default.
+* `git_repo_url`: URL of the remote git repository.
 
 ## Contributions
 

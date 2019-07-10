@@ -223,6 +223,16 @@ def get_remotes(mappings, mainline=None, stable=None):
     return remotes
 
 
+def remote_update(git_repo, remote_name):
+    subprocess.check_call(['git', 'remote', 'update', remote_name],
+                          cwd=git_repo)
+
+
+def remote_add(git_repo, remote_name, remote_url):
+    subprocess.check_call(['git', 'remote', 'add', remote_name, remote_url],
+                          cwd=git_repo)
+
+
 def check_git_repo(git_repo, remotes):
     if not os.path.isdir(git_repo):
         msg = "directory %r not present" % git_repo
