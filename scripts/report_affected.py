@@ -18,14 +18,25 @@ import kernel_sec.version
 
 def main(git_repo, remotes,
          only_fixed_upstream, include_ignored, *branch_names):
+    live_branches = kernel_sec.branch.get_live_branches()
     if branch_names:
-        # Support stable release strings as shorthand for stable branches
-        branches = [kernel_sec.branch.get_base_ver_stable_branch(name)
-                    if name[0].isdigit()
-                    else kernel_sec.branch.get_stable_branch(name)
-                    for name in branch_names]
+        branches = []
+        for branch_name in branch_names:
+            if branch_name[0].isdigit():
+                # 4.4 is mapped to linux-4.4.y
+                name = 'linux-%s.y' % branch_name
+            else:
+                name = branch_name
+
+            for branch in live_branches:
+                if branch['short_name'] == name:
+                    branches.append(branch)
+                    break
+            else:
+                msg = "Branch %s could not be found" % branch_name
+                raise argparse.ArgumentError(None, msg)
     else:
-        branches = kernel_sec.branch.get_live_branches()
+        branches = live_branches
         if only_fixed_upstream:
             branches = [branch for branch in branches
                         if branch['short_name'] != 'mainline']

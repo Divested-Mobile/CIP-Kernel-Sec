@@ -21,9 +21,6 @@ import yaml
 from . import version
 
 
-_STABLE_BRANCH_RE = re.compile(r'^linux-([\d.]+)\.y$')
-
-
 def get_base_ver_stable_branch(base_ver):
     branch_name = 'linux-%s.y' % base_ver
     return {
@@ -32,11 +29,6 @@ def get_base_ver_stable_branch(base_ver):
         'git_name': branch_name,
         'base_ver': base_ver
         }
-
-
-def get_stable_branch(branch_name):
-    match = _STABLE_BRANCH_RE.match(branch_name)
-    return match and get_base_ver_stable_branch(match.group(1))
 
 
 def _extract_live_stable_branches(doc):
