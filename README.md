@@ -41,7 +41,8 @@ current or previous year or that are already tracked here.
 stable and other configured branches, by reading the git commit logs.
 
 * `scripts/report_affected.py` - report which issues affect the
-specified branches, or all active branches.
+specified branches, or all active branches. You can use --show-description
+to obtain a short description for each CVE ID.
 
 * `scripts/validate.py` - validate all issue files against the
 schema.
