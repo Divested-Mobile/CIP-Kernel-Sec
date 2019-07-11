@@ -9,7 +9,9 @@
 # Report issues affecting each stable branch.
 
 import argparse
+import copy
 import subprocess
+import re
 
 import kernel_sec.branch
 import kernel_sec.issue
@@ -22,15 +24,38 @@ def main(git_repo, remotes,
     if branch_names:
         branches = []
         for branch_name in branch_names:
+            tag = None
             if branch_name[0].isdigit():
                 # 4.4 is mapped to linux-4.4.y
                 name = 'linux-%s.y' % branch_name
+            elif branch_name[0] == 'v':
+                # an official tag, e.g. v4.4.92-cip11
+                # infer branch from tag (regexp's must be specific)
+                for branch in live_branches:
+                    if 'tag_regexp' not in branch:
+                        # no tag_regexp defined, or mainline
+                        continue
+
+                    # predefined in branches.yml or a stable branch
+                    if re.match(branch['tag_regexp'], branch_name):
+                        tag = branch_name
+                        name = branch['short_name']
+                        break
+                else:
+                    raise ValueError('Failed to match tag %r' % branch_name)
+            elif ':' in branch_name:
+                # a possibly custom tag, e.g. linux-4.19.y-cip:myproduct-v1
+                name, tag = branch_name.split(':', 1)
             else:
                 name = branch_name
 
             for branch in live_branches:
                 if branch['short_name'] == name:
-                    branches.append(branch)
+                    # there could be multiple tags for the same branch
+                    branch_copy = copy.deepcopy(branch)
+                    if tag:
+                        branch_copy['tag'] = tag
+                    branches.append(branch_copy)
                     break
             else:
                 msg = "Branch %s could not be found" % branch_name
@@ -44,6 +69,18 @@ def main(git_repo, remotes,
     branches.sort(key=kernel_sec.branch.get_sort_key)
 
     c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remotes, branches)
+
+    # cache tag commits and set full_name to show the tag
+    tag_commits = {}
+    for branch in branches:
+        if 'tag' in branch:
+            start = 'v' + branch['base_ver']
+            end = branch['tag']
+            tag_commits[end] = set(
+                kernel_sec.branch.iter_rev_list(git_repo, end, start))
+            branch['full_name'] = ':'.join([branch['short_name'], end])
+        else:
+            branch['full_name'] = branch['short_name']
 
     branch_issues = {}
     issues = set(kernel_sec.issue.get_list())
@@ -65,15 +102,26 @@ def main(git_repo, remotes,
             if not include_ignored and ignore.get(branch_name):
                 continue
 
+            # Check if the branch is affected. If not and the issue was fixed
+            # on that branch, then make sure the tag contains that fix
             if kernel_sec.issue.affects_branch(
                     issue, branch, c_b_map.is_commit_in_branch):
-                branch_issues.setdefault(branch_name, []).append(cve_id)
+                branch_issues.setdefault(
+                    branch['full_name'], []).append(cve_id)
+            elif 'tag' in branch and fixed:
+                if fixed.get(branch_name, 'never') == 'never':
+                    continue
+                for commit in fixed[branch_name]:
+                    if commit not in tag_commits[branch['tag']]:
+                        branch_issues.setdefault(
+                            branch['full_name'], []).append(cve_id)
+                        break
 
     for branch in branches:
-        branch_name = branch['short_name']
-        print('%s:' % branch_name,
-              *sorted(branch_issues.get(branch_name, []),
-                      key=kernel_sec.issue.get_id_sort_key))
+        sorted_cve_ids = sorted(
+            branch_issues.get(branch['full_name'], []),
+            key=kernel_sec.issue.get_id_sort_key)
+        print('%s:' % branch['full_name'], *sorted_cve_ids)
 
 
 if __name__ == '__main__':
@@ -104,9 +152,11 @@ if __name__ == '__main__':
                         help='include issues that have been marked as ignored')
     parser.add_argument('branches',
                         nargs='*',
-                        help=('specific branch to report on '
-                              '(default: all active branches)'),
-                        metavar='BRANCH')
+                        help=('specific branch[:tag] or stable tag to '
+                              'report on (default: all active branches). '
+                              'e.g. linux-4.14.y linux-4.4.y:v4.4.107 '
+                              'v4.4.181-cip33 linux-4.19.y-cip:myproduct-v33'),
+                        metavar='[BRANCH[:TAG]|TAG]')
     args = parser.parse_args()
     remotes = kernel_sec.branch.get_remotes(args.remote_name,
                                             mainline=args.mainline_remote_name,

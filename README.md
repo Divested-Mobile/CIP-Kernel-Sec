@@ -72,6 +72,7 @@ keys:
 * `base_ver`: Stable version that the branch is based on, e.g.
   "4.4". This needs to be quoted so that it's a string not a
   number.
+* `tag_regexp`: A regular expression that matches tags on a branch.
 
 ### Remotes
 

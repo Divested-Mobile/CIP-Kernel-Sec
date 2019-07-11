@@ -23,11 +23,13 @@ from . import version
 
 def get_base_ver_stable_branch(base_ver):
     branch_name = 'linux-%s.y' % base_ver
+    esc_base_ver = re.escape(base_ver)
     return {
         'short_name': branch_name,
         'git_remote': 'stable',
         'git_name': branch_name,
-        'base_ver': base_ver
+        'base_ver': base_ver,
+        'tag_regexp' : r'(^v%s$|^v%s\.\d+$)' % (esc_base_ver, esc_base_ver)
         }
 
 
@@ -141,7 +143,7 @@ def get_sort_key(branch):
     return version.get_sort_key(base_ver)
 
 
-def _get_commits(git_repo, end, start=None):
+def iter_rev_list(git_repo, end, start=None):
     if start:
         list_expr = '%s..%s' % (start, end)
     else:
@@ -170,7 +172,7 @@ class CommitBranchMap:
                                  branch['git_name'])
             else:
                 end = 'v' + branch['base_ver']
-            for commit in _get_commits(git_repo, end, start):
+            for commit in iter_rev_list(git_repo, end, start):
                 self._commit_sort_key[commit] \
                     = self._branch_sort_key[branch_name]
             start = end
