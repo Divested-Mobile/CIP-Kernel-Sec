@@ -38,6 +38,9 @@ th {
     vertical-align: top;
     white-space: nowrap;
 }
+thead th {
+    text-align: left;
+}
 th, td {
     padding-left: 0.5em;
     padding-right: 0.5em;
