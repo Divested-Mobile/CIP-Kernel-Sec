@@ -45,3 +45,26 @@ th, td {
     padding-left: 0.5em;
     padding-right: 0.5em;
 }
+
+/*
+ * Stop table headings scrolling away using position: sticky; see
+ * <https://stackoverflow.com/questions/11891065/>.
+ */
+table-container {
+    display: inline-block;
+    overflow: auto;
+}
+table.fixed-header thead th {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    background-clip: padding-box;
+}
+table.fixed-header tbody th {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+    background-color: #ffffff;
+    background-clip: padding-box;
+}
