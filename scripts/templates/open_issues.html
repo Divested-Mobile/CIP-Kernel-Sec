@@ -1,0 +1,39 @@
+<link rel="stylesheet" href="/static/style.css">
+<title>Open issues</title>
+<h1>Open issues</h1>
+<div class="table-container">
+  <table class="fixed-header">
+    <thead>
+      <tr>
+	<th/>
+	{% for name, _, _ in branches %}
+	<th>
+	  <a href="/branch/{{ name }}/">{{ name }}</a>
+	</th>
+	{% endfor %}
+      </tr>
+    </thead>
+    {% for cve_id, issue in cve_ids %}
+    <tr>
+      <th>
+	<a href="/issue/{{ cve_id }}/">{{ cve_id }}</a>
+      </th>
+      {% for name, branch, affected in branches %}
+      {% if not affected[cve_id] %}
+      {% if issue['fixed-by'] and issue['fixed-by'][name] %}
+      <td class="good">fixed</td>
+      {% else %}
+      <td class="good">never affected</td>
+      {% endif %}
+      {% else %}
+      {% if issue.ignore and (issue.ignore.all or issue.ignore[name]) %}
+      <td class="ignored">ignored</td>
+      {% else %}
+      <td class="bad">vulnerable</td>
+      {% endif %}
+      {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+</div>

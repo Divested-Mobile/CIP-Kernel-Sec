@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2018 Codethink Ltd.
+# Copyright 2018-2019 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
@@ -137,6 +137,43 @@ class Issue:
             remotes=self._root.remotes)
 
 
+class OpenIssues:
+    _template = _template_env.get_template('open_issues.html')
+
+    def __init__(self, root):
+        self._root = root
+
+    @cherrypy.expose
+    def index(self):
+        open_cve_ids = []
+        branches = [
+            (branch_name, self._root.branch_defs[branch_name], {})
+            for branch_name in self._root.branch_names
+        ]
+        for cve_id in _issue_cache.keys():
+            issue = _issue_cache[cve_id]
+            ignore = issue.get('ignore', {})
+            if 'all' in ignore:
+                continue
+            is_open = False
+            for branch_name, branch, affected in branches:
+                if kernel_sec.issue.affects_branch(
+                        issue, branch, self._root.is_commit_in_branch):
+                    affected[cve_id] = True
+                    if branch_name not in ignore:
+                        is_open = True
+            if is_open:
+                open_cve_ids.append(cve_id)
+
+        return self._template.render(
+            cve_ids=[
+                (cve_id, _issue_cache[cve_id])
+                for cve_id in sorted(open_cve_ids,
+                                     key=kernel_sec.issue.get_id_sort_key)
+            ],
+            branches=branches)
+
+
 class Issues:
     _template = _template_env.get_template('issues.html')
 
@@ -146,6 +183,8 @@ class Issues:
     def _cp_dispatch(self, vpath):
         if len(vpath) == 1 and vpath[0] in _issue_cache:
             return Issue(vpath.pop(), self._root)
+        if len(vpath) == 1 and vpath[0] == 'open':
+            return OpenIssues(self._root)
         return vpath
 
     @cherrypy.expose
