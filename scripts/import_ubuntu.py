@@ -168,9 +168,9 @@ def load_cve(cve, strict=False):
             affected.setdefault(pkg, dict())
             affected[pkg].setdefault(release, [state, notes])
         elif field not in ['References', 'Description', 'Ubuntu-Description',
-                           'Notes', 'Bugs', 'Assigned-to', 'Approved-by',
-                           'PublicDate', 'PublicDateAtUSN', 'CRD',
-                           'Discovered-by']:
+                           'Notes', 'Mitigation', 'Bugs', 'Assigned-to',
+                           'Approved-by', 'PublicDate', 'PublicDateAtUSN',
+                           'CRD', 'Discovered-by']:
             msg += "%s: unknown field '%s'\n" % (cve, field)
             code = EXIT_FAIL
         else:
