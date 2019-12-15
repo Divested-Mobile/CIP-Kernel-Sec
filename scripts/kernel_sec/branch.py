@@ -231,10 +231,43 @@ def check_git_repo(git_repo, remotes):
     if not os.path.isdir(git_repo):
         msg = "directory %r not present" % git_repo
         raise argparse.ArgumentError(None, msg)
-    # .git could be a regular file (worktrees) or a directory
-    if not os.path.exists(os.path.join(git_repo, '.git')):
+    # This returns "." if we are in the top level of a bare repository,
+    # ".git" if in the top level of a normal repository, or an absoulute
+    # path if we are in a sub-directory or a working tree.
+    res = subprocess.run(['git', 'rev-parse', '--git-dir'],
+                         capture_output=True, text=True,
+                         cwd=git_repo)
+    if res.returncode:
         msg = "directory %r is not a git repository" % git_repo
         raise argparse.ArgumentError(None, msg)
+
+    if res.stdout.strip() == ".":
+        # Is this a bare repository? If not we are in the .git directory
+        res = subprocess.run(['git', 'rev-parse', '--is-bare-repository'],
+                         capture_output=True, text=True,
+                         cwd=git_repo)
+        if res.stdout.strip() != "true":
+            msg = "directory %r is not the git repository's root directory" % git_repo
+            raise argparse.ArgumentError(None, msg)
+    elif res.stdout.strip() == ".git":
+        # top-level directory of a standard git repository
+        pass
+    else:
+        # Is this a bare repository? If so we are in a sub-directory
+        res = subprocess.run(['git', 'rev-parse', '--is-bare-repository'],
+                         capture_output=True, text=True,
+                         cwd=git_repo)
+        if res.stdout.strip() == "true":
+            msg = "directory %r is not the git repository's root directory" % git_repo
+            raise argparse.ArgumentError(None, msg)
+
+        # Are we in a subdirectory of a standard repository or working tree?
+        res = subprocess.run(['git', 'rev-parse', '--show-prefix'],
+                             capture_output=True, text=True,
+                             cwd=git_repo)
+        if res.stdout.strip():
+            msg = "directory %r is not the git repository's root directory" % git_repo
+            raise argparse.ArgumentError(None, msg)
 
     current_remotes = subprocess.check_output(
         ['git', 'remote', 'show'], cwd=git_repo).decode(
