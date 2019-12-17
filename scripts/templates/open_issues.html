@@ -21,17 +21,18 @@
       {% for name, branch, affected in branches %}
       {% if not affected[cve_id] %}
       {% if issue['fixed-by'] and issue['fixed-by'][name] %}
-      <td class="good">fixed</td>
+      {% set cls, text = 'good', 'fixed' %}
       {% else %}
-      <td class="good">never affected</td>
+      {% set cls, text = 'good', 'never affected' %}
       {% endif %}
       {% else %}
       {% if issue.ignore and (issue.ignore.all or issue.ignore[name]) %}
-      <td class="ignored">ignored</td>
+      {% set cls, text = 'ignored', 'ignored' %}
       {% else %}
-      <td class="bad">vulnerable</td>
+      {% set cls, text = 'bad', 'vulnerable' %}
       {% endif %}
       {% endif %}
+      <td class="{{ cls }}">{{ text }}</td>
       {% endfor %}
     </tr>
     {% endfor %}
