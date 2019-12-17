@@ -10,7 +10,7 @@
 <table>
   {% if issue.references %}
   <tr>
-    <th>References</th>
+    <th scope="row">References</th>
     <td/>
     <td>
       {% for url in issue.references %}
@@ -22,7 +22,7 @@
   {% endif %}
   {% if issue.aliases %}
   <tr>
-    <th>Aliases</th>
+    <th scope="row">Aliases</th>
     <td/>
     <td>
       {% for alias in issue.aliases %}
@@ -33,9 +33,9 @@
   {% endif %}
   {% if issue.comments %}
   <tr>
-    <th rowspan={{ issue.comments|length }}>Comments</th>
+    <th scope="row" rowspan={{ issue.comments|length }}>Comments</th>
     {% for handle in issue.comments %}
-    <th>
+    <th scope="row">
       {{ handle }}
     </th>
     <td>
@@ -50,7 +50,7 @@
   {% endif %}
   {% if issue.reporters %}
   <tr>
-    <th>Reporters</th>
+    <th scope="row">Reporters</th>
     <td/>
     <td>
       {% for rep in issue.reporters %}
@@ -62,7 +62,7 @@
   {% endif %}
   {% if issue['embargo-end'] %}
   <tr>
-    <th>Embargo</th>
+    <th scope="row">Embargo</th>
     <td/>
     <td>
       {# TODO: If embargo-end is in the future we should prominently
@@ -72,11 +72,11 @@
   </tr>
   {% endif %}
   <tr>
-    <th rowspan={{ branches|length }}>Status</th>
+    <th scope="row" rowspan={{ branches|length }}>Status</th>
     {% for branch, affected in branches %}
     {% set name = branch.short_name %}
     {% set url_prefix = remotes[branch.git_remote].commit_url_prefix %}
-    <th>
+    <th scope="row">
       <a href="/branch/{{ name }}/">{{ name }}</a>
     </th>
     <td>
@@ -111,7 +111,7 @@
   </tr>
   {% if issue['fix-depends-on'] %}
   <tr>
-    <th>Fix depends on</th>
+    <th scope="row">Fix depends on</th>
     <td/>
     <td>
       {% for commit in issue['fix-depends-on'] %}

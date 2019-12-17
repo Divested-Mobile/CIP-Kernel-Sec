@@ -7,7 +7,7 @@
       <tr>
 	<th/>
 	{% for name, _, _ in branches %}
-	<th>
+	<th scope="col">
 	  <a href="/branch/{{ name }}/">{{ name }}</a>
 	</th>
 	{% endfor %}
@@ -15,7 +15,7 @@
     </thead>
     {% for cve_id, issue in cve_ids %}
     <tr>
-      <th>
+      <th scope="row">
 	<a href="/issue/{{ cve_id }}/">{{ cve_id }}</a>
       </th>
       {% for name, branch, affected in branches %}
