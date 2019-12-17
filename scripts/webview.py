@@ -261,10 +261,9 @@ if __name__ == '__main__':
     kernel_sec.branch.check_git_repo(args.git_repo, remotes)
 
     conf = {
-        '/static/style.css': {
-            'tools.staticfile.on': True,
-            'tools.staticfile.filename':
-            os.path.abspath('scripts/templates/style.css')
+        '/static': {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': os.path.abspath('scripts/static')
         }
     }
 
