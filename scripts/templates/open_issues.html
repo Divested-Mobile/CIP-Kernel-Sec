@@ -26,7 +26,9 @@
     {% for cve_id, issue in cve_ids %}
     <tr>
       <th scope="row">
-	<a href="/issue/{{ cve_id }}/">{{ cve_id }}</a>
+	<a href="/issue/{{ cve_id }}/"
+	   title="{{ issue.description|truncate(100) }}">
+	  {{ cve_id }}</a>
       </th>
       {% for name, branch, affected in branches %}
       {% if not affected[cve_id] %}
