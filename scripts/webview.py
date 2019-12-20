@@ -254,6 +254,14 @@ if __name__ == '__main__':
                         dest='stable_remote_name',
                         help="git remote name to use instead of 'stable'",
                         metavar='OTHER-NAME')
+    parser.add_argument('--host',
+                        dest='hostname', default='127.0.0.1',
+                        help="hostname on which web server runs",
+                        metavar='HOSTNAME')
+    parser.add_argument('--port',
+                        dest='port', default=8080, type=int,
+                        help="port on which web server runs",
+                        metavar='PORT')
     args = parser.parse_args()
     remotes = kernel_sec.branch.get_remotes(args.remote_name,
                                             mainline=args.mainline_remote_name,
@@ -266,6 +274,11 @@ if __name__ == '__main__':
             'tools.staticdir.dir': os.path.abspath('scripts/static')
         }
     }
+
+    cherrypy.config.update({
+        'server.socket_host': args.hostname,
+        'server.socket_port': args.port,
+        })
 
     cherrypy.quickstart(Root(args.git_repo, remotes),
                         '/',
