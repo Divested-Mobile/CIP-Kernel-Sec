@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="/static/style.css">
+<script src="/static/script.js" defer></script>
 <title>Open issues</title>
 <h1>Open issues</h1>
 <div class="table-container">
@@ -7,31 +8,46 @@
       <tr>
 	<th/>
 	{% for name, _, _ in branches %}
-	<th>
-	  <a href="/branch/{{ name }}/">{{ name }}</a>
+	<th class="col{{ loop.index }}" scope="col">
+	  <button class="expanded compact" type="button"
+		  onclick="collapse_class('col{{ loop.index }}')">
+	    -
+	  </button>
+	  <a class="expanded" href="/branch/{{ name }}/">{{ name }}</a>
+	  <button class="collapsed compact" type="button"
+		  onclick="expand_class('col{{ loop.index }}')"
+		  title="{{ name }}">
+	    +
+	  </button>
 	</th>
 	{% endfor %}
       </tr>
     </thead>
     {% for cve_id, issue in cve_ids %}
     <tr>
-      <th>
-	<a href="/issue/{{ cve_id }}/">{{ cve_id }}</a>
+      <th scope="row">
+	<a href="/issue/{{ cve_id }}/"
+	   title="{{ issue.description|truncate(100) }}">
+	  {{ cve_id }}</a>
       </th>
       {% for name, branch, affected in branches %}
       {% if not affected[cve_id] %}
       {% if issue['fixed-by'] and issue['fixed-by'][name] %}
-      <td class="good">fixed</td>
+      {% set cls, text = 'good', 'fixed' %}
       {% else %}
-      <td class="good">never affected</td>
+      {% set cls, text = 'good', 'never affected' %}
       {% endif %}
       {% else %}
       {% if issue.ignore and (issue.ignore.all or issue.ignore[name]) %}
-      <td class="ignored">ignored</td>
+      {% set cls, text = 'ignored', 'ignored' %}
       {% else %}
-      <td class="bad">vulnerable</td>
+      {% set cls, text = 'bad', 'vulnerable' %}
       {% endif %}
       {% endif %}
+      <td class="col{{ loop.index }} {{ cls }}">
+	<span class="expanded">{{ text }}</span>
+	<span class="collapsed" title="{{ text }}">…</span>
+      </td>
       {% endfor %}
     </tr>
     {% endfor %}

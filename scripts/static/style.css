@@ -68,3 +68,20 @@ table.fixed-header tbody th {
     background-color: #ffffff;
     background-clip: padding-box;
 }
+
+/* Support for dynamically collapsed/expanded content */
+.collapsed {
+    display: none;
+}
+.is-collapsed .collapsed {
+    display: inline;
+}
+.is-collapsed .expanded {
+    display: none;
+}
+
+/* Button without the usual chunky border */
+button.compact {
+    border: solid 1px;
+    padding: 0px 4px;
+}
