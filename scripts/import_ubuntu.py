@@ -170,7 +170,7 @@ def load_cve(cve, strict=False):
         elif field not in ['References', 'Description', 'Ubuntu-Description',
                            'Notes', 'Mitigation', 'Bugs', 'Assigned-to',
                            'Approved-by', 'PublicDate', 'PublicDateAtUSN',
-                           'CRD', 'Discovered-by']:
+                           'CRD', 'Discovered-by', 'CVSS']:
             msg += "%s: unknown field '%s'\n" % (cve, field)
             code = EXIT_FAIL
         else:
