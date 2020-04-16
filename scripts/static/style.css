@@ -50,10 +50,6 @@ th, td {
  * Stop table headings scrolling away using position: sticky; see
  * <https://stackoverflow.com/questions/11891065/>.
  */
-table-container {
-    display: inline-block;
-    overflow: auto;
-}
 table.fixed-header thead th {
     position: -webkit-sticky;
     position: sticky;
