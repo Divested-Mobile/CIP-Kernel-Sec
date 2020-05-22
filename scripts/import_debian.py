@@ -53,10 +53,10 @@ def load_debian_issue(f):
             continue
         match = COMMENT_RE.match(line)
         if match:
-            name = 'Debian-' + match.group(1)
+            name = 'debian/' + match.group(1)
             rest = match.group(2)
         else:
-            name = 'Debian'
+            name = 'debian'
             rest = line
         comments.setdefault(name, []).append(rest)
     if comments:

@@ -227,13 +227,13 @@ def load_ubuntu_issue(f):
         issue['references'] = refs
 
     comments = {}
-    name = 'Ubuntu'
+    name = 'ubuntu'
     for line in ubu_issue['Notes'].split('\n'):
         if not line:
             continue
         match = COMMENT_RE.match(line)
         if match:
-            name = 'Ubuntu-' + match.group(1)
+            name = 'ubuntu/' + match.group(1)
             rest = match.group(2)
         else:
             rest = line
