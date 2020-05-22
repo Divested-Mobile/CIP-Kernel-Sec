@@ -6,6 +6,6 @@
 </p>
 <ul>
   {% for name in names %}
-  <li><a href="{{ name }}/">{{ name }}</a></li>
+  <li><a href="{{ name | urlencode | replace('/', '%2F') }}/">{{ name }}</a></li>
   {% endfor %}
 </ul>

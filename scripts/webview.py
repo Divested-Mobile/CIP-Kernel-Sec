@@ -9,6 +9,7 @@
 import argparse
 import os
 import re
+import urllib.parse
 
 import cherrypy
 import jinja2
@@ -142,8 +143,10 @@ class Branches:
         self._root = root
 
     def _cp_dispatch(self, vpath):
-        if len(vpath) == 1 and vpath[0] in self._root.branch_names:
-            return Branch(vpath.pop(), self._root)
+        if len(vpath) == 1:
+            branch_name = urllib.parse.unquote(vpath[0])
+            if branch_name in self._root.branch_names:
+                return Branch(branch_name, self._root)
         return vpath
 
     @cherrypy.expose
