@@ -32,6 +32,16 @@ def change_patch_info(change):
     return change[6:].split(':')
 
 
+def change_is_version(change):
+    return change.startswith('version:')
+
+
+def change_version_tag(change):
+    if not change_is_version(change):
+        raise ValueError('change string does not name an version')
+    return change[8:]
+
+
 def _validate_string(name, value):
     if type(value) is str:
         return
@@ -74,7 +84,8 @@ def _validate_mapping_changes(name, value):
             for entry in changes:
                 if type(entry) is not str \
                    or not (change_is_git_hash(entry) \
-                           or change_is_patch(entry)):
+                           or change_is_patch(entry) \
+                           or change_is_version(entry)):
                     break  # to outer break
             else:
                 continue

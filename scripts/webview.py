@@ -19,7 +19,8 @@ import markupsafe
 import kernel_sec.branch
 import kernel_sec.issue
 from kernel_sec.issue \
-    import change_is_git_hash, change_is_patch, change_patch_info
+    import change_is_git_hash, change_is_patch, change_patch_info, \
+    change_is_version, change_version_tag
 
 
 # Match host part and either query part or last path part
@@ -85,6 +86,14 @@ def _change_url(change, branch):
             file_name=urllib.parse.quote(file_name),
             base_ver=urllib.parse.quote(branch.get('base_ver')))
 
+    if change_is_version(change):
+        if 'git_remote' in branch:
+            return branch['git_remote']['tag_url_prefix'] \
+                + urllib.parse.quote(change_version_tag(change))
+        if 'patch_queue' in branch:
+            return branch['patch_queue']['tag_url_prefix'] \
+                + urllib.parse.quote(change_version_tag(change))
+
     return None
 
 
@@ -98,6 +107,9 @@ def _change_abbrev(change):
         if file_basename == file_name:
             return file_name
         return '…/' + file_basename
+
+    if change_is_version(change):
+        return change_version_tag(change)
 
     return None
 
