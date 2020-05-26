@@ -20,7 +20,7 @@ import kernel_sec.version
 
 def main(git_repo, remotes, only_fixed_upstream,
          include_ignored, show_description, *branch_names):
-    live_branches = kernel_sec.branch.get_live_branches()
+    live_branches = kernel_sec.branch.get_live_branches(remotes)
     if branch_names:
         branches = []
         for branch_name in branch_names:
@@ -68,7 +68,7 @@ def main(git_repo, remotes, only_fixed_upstream,
 
     branches.sort(key=kernel_sec.branch.get_sort_key)
 
-    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remotes, branches)
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, branches)
 
     # cache tag commits and set full_name to show the tag
     tag_commits = {}

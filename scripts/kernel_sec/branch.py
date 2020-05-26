@@ -21,7 +21,7 @@ import yaml
 from . import version
 
 
-def get_base_ver_stable_branch(base_ver):
+def _get_base_ver_stable_branch(base_ver):
     esc_base_ver = re.escape(base_ver)
     return {
         'short_name': 'stable/%s' % base_ver,
@@ -76,7 +76,7 @@ def _extract_live_stable_branches(doc):
         if not match:
             raise ValueError('failed to parse stable version %r' % version)
 
-        branches.append(get_base_ver_stable_branch(match.group(1)))
+        branches.append(_get_base_ver_stable_branch(match.group(1)))
 
     return branches
 
@@ -123,7 +123,7 @@ def _get_configured_branches(filename):
         return []
 
 
-def get_live_branches():
+def get_live_branches(remotes):
     branches = _get_live_stable_branches()
     branches.extend(_get_configured_branches('conf/branches.yml'))
     branches.extend(
@@ -134,6 +134,12 @@ def get_live_branches():
         'git_remote': 'torvalds',
         'git_name': 'master'
         })
+
+    # Replace remote names with references to config
+    for branch in branches:
+        if 'git_remote' in branch:
+            branch['git_remote'] = remotes[branch['git_remote']]
+
     return branches
 
 
@@ -158,7 +164,7 @@ def iter_rev_list(git_repo, end, start=None):
 
 
 class CommitBranchMap:
-    def __init__(self, git_repo, remotes, branches):
+    def __init__(self, git_repo, branches):
         # Generate sort key for each branch
         self._branch_sort_key = {
             branch['short_name']: get_sort_key(branch) for branch in branches
@@ -170,7 +176,7 @@ class CommitBranchMap:
         for branch in sorted(branches, key=get_sort_key):
             branch_name = branch['short_name']
             if branch_name == 'mainline':
-                end = '%s/%s' % (remotes[branch['git_remote']]['git_name'],
+                end = '%s/%s' % (branch['git_remote']['git_name'],
                                  branch['git_name'])
             else:
                 end = 'v' + branch['base_ver']

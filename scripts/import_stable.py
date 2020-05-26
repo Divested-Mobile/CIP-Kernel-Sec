@@ -31,7 +31,7 @@ BACKPORT_COMMIT_BOTTOM_RE = re.compile(
     .format(**RE_USE))
 
 
-def get_backports(git_repo, remotes, branches, debug=False):
+def get_backports(git_repo, branches, debug=False):
     backports = {}
 
     for branch in branches:
@@ -45,7 +45,7 @@ def get_backports(git_repo, remotes, branches, debug=False):
             # by 1
             ['git', 'log', '--no-notes', '--pretty=%H%n%w(0,1,1)%b',
              'v%s..%s/%s'
-             % (base_ver, remotes[branch['git_remote']]['git_name'],
+             % (base_ver, branch['git_remote']['git_name'],
                 branch['git_name'])],
             cwd=git_repo, stdout=subprocess.PIPE)
 
@@ -133,14 +133,15 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
 
 
 def main(git_repo, remotes, debug=False):
-    branches = kernel_sec.branch.get_live_branches()
-    remote_names = set(branch['git_remote'] for branch in branches)
+    branches = kernel_sec.branch.get_live_branches(remotes)
+    remote_names = set(branch['git_remote']['git_name']
+                       for branch in branches
+                       if 'git_remote' in branch)
 
     for remote_name in remote_names:
-        kernel_sec.branch.remote_update(
-            git_repo, remotes[remote_name]['git_name'])
-    backports = get_backports(git_repo, remotes, branches, debug)
-    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remotes, branches)
+        kernel_sec.branch.remote_update(git_repo, remote_name)
+    backports = get_backports(git_repo, branches, debug)
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, branches)
 
     issues = set(kernel_sec.issue.get_list())
     for cve_id in issues:

@@ -173,8 +173,7 @@ class Issue:
                      issue, self._root.branch_defs[branch_name],
                      self._root.is_commit_in_branch))
                 for branch_name in self._root.branch_names
-            ],
-            remotes=self._root.remotes)
+            ])
 
 
 class OpenIssues:
@@ -243,7 +242,7 @@ class Root:
     def __init__(self, git_repo, remotes):
         self.remotes = remotes
 
-        branch_defs = kernel_sec.branch.get_live_branches()
+        branch_defs = kernel_sec.branch.get_live_branches(remotes)
         self.branch_names = [
             branch['short_name']
             for branch in sorted(branch_defs,
@@ -253,8 +252,7 @@ class Root:
             branch['short_name']: branch for branch in branch_defs
         }
 
-        c_b_map = kernel_sec.branch.CommitBranchMap(
-            git_repo, remotes, branch_defs)
+        c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, branch_defs)
         self.is_commit_in_branch = c_b_map.is_commit_in_branch
 
         self.branches = Branches(self)

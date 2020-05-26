@@ -75,7 +75,7 @@
     <th scope="row" rowspan={{ branches|length }}>Status</th>
     {% for branch, affected in branches %}
     {% set name = branch.short_name %}
-    {% set url_prefix = remotes[branch.git_remote].commit_url_prefix %}
+    {% set url_prefix = branch.git_remote.commit_url_prefix %}
     <th scope="row">
       <a href="/branch/{{ name | urlencode | replace('/', '%2F') }}/">{{ name }}</a>
     </th>
