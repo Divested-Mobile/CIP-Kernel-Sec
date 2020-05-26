@@ -35,10 +35,13 @@ def get_backports(git_repo, branches, debug=False):
     backports = {}
 
     for branch in branches:
-        branch_name = branch['short_name']
-        if branch_name == 'mainline':
+        # Skip mainline and any branches that we can't access
+        if 'base_ver' not in branch \
+           or 'git_remote' not in branch \
+           or 'git_name' not in branch:
             continue
 
+        branch_name = branch['short_name']
         base_ver = branch['base_ver']
         log_proc = subprocess.Popen(
             # Format with hash on one line, body on following lines indented
