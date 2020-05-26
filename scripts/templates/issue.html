@@ -75,7 +75,6 @@
     <th scope="row" rowspan={{ branches|length }}>Status</th>
     {% for branch, affected in branches %}
     {% set name = branch.short_name %}
-    {% set url_prefix = branch.git_remote.commit_url_prefix %}
     <th scope="row">
       <a href="/branch/{{ name | urlencode | replace('/', '%2F') }}/">{{ name }}</a>
     </th>
@@ -83,8 +82,8 @@
       {% if not affected %}
       {% if issue['fixed-by'] and issue['fixed-by'][name] and issue['fixed-by'][name] != 'never' %}
       <span class="good">fixed</span> by
-      {% for commit in issue['fixed-by'][name] %}
-      <a href="{{ url_prefix }}{{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
+      {% for change in issue['fixed-by'][name] %}
+      <a href="{{ change | change_url(branch) }}">{{ change | change_abbrev }}</a>{% if not loop.last %},{% endif %}
       {% endfor %}
       {% else %}
       <span class="good">never affected</span>
@@ -97,8 +96,8 @@
       {% endif %}
       {% if issue['introduced-by'] and issue['introduced-by'][name] and issue['introduced-by'][name] != 'never' %}
       - introduced by
-      {% for commit in issue['introduced-by'][name] %}
-      <a href="{{ url_prefix }}{{ commit }}">{{ commit[:12] }}</a>{% if not loop.last %},{% endif %}
+      {% for change in issue['introduced-by'][name] %}
+      <a href="{{ change | change_url(branch) }}">{{ change | change_abbrev }}</a>{% if not loop.last %},{% endif %}
       {% endfor %}
       {% endif %}
       {% endif %}

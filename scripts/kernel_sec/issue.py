@@ -1,5 +1,5 @@
 # Copyright 2006 Kirill Simonov <xi@resolvent.net>
-# Copyright 2017-2018 Codethink Ltd.
+# Copyright 2017-2018,2020 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
@@ -18,8 +18,18 @@ import yaml.loader
 _GIT_HASH_RE = re.compile(r'^[0-9a-f]{40}$')
 
 
-def is_git_hash(s):
-    return _GIT_HASH_RE.match(s) is not None
+def change_is_git_hash(change):
+    return _GIT_HASH_RE.match(change) is not None
+
+
+def change_is_patch(change):
+    return change.startswith('patch:')
+
+
+def change_patch_info(change):
+    if not change_is_patch(change):
+        raise ValueError('change string does not name a patch')
+    return change[6:].split(':')
 
 
 def _validate_string(name, value):
@@ -54,29 +64,31 @@ def _validate_mapping_string(name, value):
     raise ValueError('%s must be a mapping to strings' % name)
 
 
-def _validate_mapping_sequence_hash(name, value):
+def _validate_mapping_changes(name, value):
     if type(value) is dict:
-        for seq in value.values():
-            if seq == 'never':
+        for changes in value.values():
+            if changes == 'never':
                 continue
-            if type(seq) is not list:
+            if type(changes) is not list:
                 break
-            for entry in seq:
-                if type(entry) is not str or not is_git_hash(entry):
+            for entry in changes:
+                if type(entry) is not str \
+                   or not (change_is_git_hash(entry) \
+                           or change_is_patch(entry)):
                     break  # to outer break
             else:
                 continue
             break  # to top level
         else:
             return
-    raise ValueError('%s must be a mapping to sequences of git hashes' %
+    raise ValueError('%s must be a mapping of branch names to changes' %
                      name)
 
 
 def _validate_hashmapping_string(name, value):
     if type(value) is dict:
         for h, v in value.items():
-            if type(h) is not str or not is_git_hash(h):
+            if type(h) is not str or not change_is_git_hash(h):
                 break
             if type(v) is not str:
                 break
@@ -94,8 +106,8 @@ _ALL_FIELDS = [
     ('comments',        _validate_mapping_string),
     ('reporters',       _validate_sequence_string),
     ('embargo-end',     _validate_datetime),
-    ('introduced-by',   _validate_mapping_sequence_hash),
-    ('fixed-by',        _validate_mapping_sequence_hash),
+    ('introduced-by',   _validate_mapping_changes),
+    ('fixed-by',        _validate_mapping_changes),
     ('fix-depends-on',  _validate_hashmapping_string),
     ('ignore',          _validate_mapping_string),
     ('tests',           _validate_sequence_string)
@@ -135,14 +147,23 @@ def merge_into(ours, theirs):
         nonlocal changed
         if field_name in theirs:
             our_dict = ours.setdefault(field_name, {})
-            for branch, hashes in theirs[field_name].items():
-                our_hashes = our_dict.setdefault(branch, [])
+            for branch, changes in theirs[field_name].items():
+                our_changes = our_dict.setdefault(branch, [])
                 # Only update if they agree with what we already have
-                if our_hashes != 'never' and set(hashes) > set(our_hashes):
-                    for h in hashes:
-                        if h not in our_hashes:
-                            our_hashes.append(h)
-                            changed = True
+                # or they replace all patches with commits
+                if our_changes != 'never':
+                    if set(changes) > set(our_changes):
+                        for change in changes:
+                            if change not in our_changes:
+                                our_changes.append(change)
+                                changed = True
+                    elif len(changes) == len(our_changes) \
+                         and all(change_is_git_hash(change)
+                                 for change in changes) \
+                         and all(change_is_patch(change)
+                                 for change in our_changes):
+                        our_changes[:] = changes
+                        changed = True
 
     # Don't attempt to merge description.  As it is a mandatory field
     # we must already have a description.

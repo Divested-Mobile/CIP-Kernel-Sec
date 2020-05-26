@@ -8,6 +8,7 @@
 
 import argparse
 import os
+import posixpath
 import re
 import urllib.parse
 
@@ -17,6 +18,8 @@ import markupsafe
 
 import kernel_sec.branch
 import kernel_sec.issue
+from kernel_sec.issue \
+    import change_is_git_hash, change_is_patch, change_patch_info
 
 
 # Match host part and either query part or last path part
@@ -71,11 +74,41 @@ def _linkify(context, value):
     return result
 
 
+def _change_url(change, branch):
+    if change_is_git_hash(change):
+        return branch['git_remote']['commit_url_prefix'] + change
+
+    if change_is_patch(change):
+        ref_name, file_name = change_patch_info(change)
+        return branch['patch_queue']['patch_url_format'].format(
+            ref_name=urllib.parse.quote(ref_name),
+            file_name=urllib.parse.quote(file_name),
+            base_ver=urllib.parse.quote(branch.get('base_ver')))
+
+    return None
+
+
+def _change_abbrev(change):
+    if change_is_git_hash(change):
+        return change[:12]
+
+    if change_is_patch(change):
+        _, file_name = change_patch_info(change)
+        file_basename = posixpath.basename(file_name)
+        if file_basename == file_name:
+            return file_name
+        return '…/' + file_basename
+
+    return None
+
+
 _template_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader('scripts/templates'),
     autoescape=True)
 _template_env.filters['urlabbrev'] = _url_abbrev
 _template_env.filters['linkify'] = _linkify
+_template_env.filters['change_url'] = _change_url
+_template_env.filters['change_abbrev'] = _change_abbrev
 
 
 class IssueCache:

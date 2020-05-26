@@ -78,7 +78,7 @@ def load_debian_issue(f):
             # These are *usually* git commit hashes but could be patch names
             hashes = [ref
                       for ref in COMMA_SEP_RE.split(match.group('changerefs'))
-                      if kernel_sec.issue.is_git_hash(ref)]
+                      if kernel_sec.issue.change_is_git_hash(ref)]
             if hashes:
                 issue.setdefault('fixed-by', {})[branch] = hashes
         if match and \

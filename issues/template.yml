@@ -25,6 +25,8 @@ introduced-by:
 fixed-by:
   mainline: [23456789abcdef0123456789abcdef0123456789]
   # List all commits that were made in response to this specific issue.
+  # List patch names with the prefix 'patch:' if the fixes are
+  # currently in a patch queue for the branch.
   # Put 'never' if issue has not yet been fixed.
   other-branch: [3456789abcdef0123456789abcdef01234567890]
   # List all commits that are backports of the fix.
