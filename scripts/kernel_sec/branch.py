@@ -1,4 +1,4 @@
-# Copyright 2017-2018 Codethink Ltd.
+# Copyright 2017-2018,2020 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
@@ -123,6 +123,14 @@ def _get_configured_branches(filename):
         return []
 
 
+def _get_configured_patch_queues(filename):
+    try:
+        with open(filename) as f:
+            return yaml.safe_load(f)
+    except IOError:
+        return {}
+
+
 def get_live_branches(remotes):
     branches = _get_live_stable_branches()
     branches.extend(_get_configured_branches('conf/branches.yml'))
@@ -135,10 +143,17 @@ def get_live_branches(remotes):
         'git_name': 'master'
         })
 
-    # Replace remote names with references to config
+    patch_queues = _get_configured_patch_queues('conf/patch-queues.yml')
+    patch_queues.update(
+        _get_configured_patch_queues(
+            os.path.expanduser('~/.config/kernel-sec/patch-queues.yml')))
+
+    # Replace remote and patch queue names with references to config
     for branch in branches:
         if 'git_remote' in branch:
             branch['git_remote'] = remotes[branch['git_remote']]
+        if 'patch_queue' in branch:
+            branch['patch_queue'] = patch_queues[branch['patch_queue']]
 
     return branches
 
