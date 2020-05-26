@@ -18,3 +18,15 @@
   git_remote: cip
   git_name: linux-4.19.y-cip-rt
   tag_regexp: '^v4\.19\.\d+-cip\d+-rt\d+$'
+- short_name: debian/jessie-security
+  base_ver: "3.16"
+  patch_queue: debian
+  debian_branch_point: 3.16.7-ckt9-2
+- short_name: debian/stretch-security
+  base_ver: "4.9"
+  patch_queue: debian
+  debian_branch_point: 4.9.30-2
+- short_name: debian/buster-security
+  base_ver: "4.19"
+  patch_queue: debian
+  debian_branch_point: 4.19.37-5

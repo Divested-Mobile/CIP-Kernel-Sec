@@ -1,0 +1,5 @@
+stable-queue:
+  patch_url_format: https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/tree/queue-{base_ver}/{file_name}/?h={ref_name}
+debian:
+  patch_url_format: https://salsa.debian.org/kernel-team/linux/-/tree/{ref_name}/debian/patches/{file_name}
+  tag_url_prefix: https://salsa.debian.org/kernel-team/linux/-/tags/

@@ -28,7 +28,8 @@ def _get_base_ver_stable_branch(base_ver):
         'git_remote': 'stable',
         'git_name': 'linux-%s.y' % base_ver,
         'base_ver': base_ver,
-        'tag_regexp' : r'(^v%s$|^v%s\.\d+$)' % (esc_base_ver, esc_base_ver)
+        'tag_regexp' : r'(^v%s$|^v%s\.\d+$)' % (esc_base_ver, esc_base_ver),
+        'patch_queue': 'stable-queue',
         }
 
 
