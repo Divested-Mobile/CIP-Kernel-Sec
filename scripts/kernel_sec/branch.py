@@ -241,6 +241,12 @@ def get_remotes(mappings, mainline=None, stable=None):
     return remotes
 
 
+def remote_list(git_repo):
+    return subprocess.check_output(['git', 'remote'],
+                                   cwd=git_repo, text=True) \
+                     .strip().split('\n')
+
+
 def remote_update(git_repo, remote_name):
     subprocess.check_call(['git', 'remote', 'update', remote_name],
                           cwd=git_repo)

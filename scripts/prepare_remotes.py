@@ -19,17 +19,21 @@ import kernel_sec.branch
 
 def main(git_repo, remotes):
     if os.path.isdir(git_repo):
-        msg = "directory %r already exists" % git_repo
-        raise argparse.ArgumentError(None, msg)
+        existing_remotes = set(kernel_sec.branch.remote_list(git_repo))
     else:
         os.mkdir(git_repo)
         subprocess.check_call(['git', 'init', '.'], cwd=git_repo)
+        existing_remotes = set()
 
     for key in remotes.keys():
         remote = remotes[key]  # __getitem__ will add git_name
-        kernel_sec.branch.remote_add(
-            git_repo, remote['git_name'], remote['git_repo_url'])
-        kernel_sec.branch.remote_update(git_repo, remote['git_name'])
+        remote_name = remote['git_name']
+        if remote_name in existing_remotes:
+            pass
+        else:
+            kernel_sec.branch.remote_add(
+                git_repo, remote_name, remote['git_repo_url'])
+        kernel_sec.branch.remote_update(git_repo, remote_name)
 
     # self-check
     kernel_sec.branch.check_git_repo(git_repo, remotes)
