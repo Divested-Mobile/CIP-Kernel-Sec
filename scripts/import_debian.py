@@ -63,6 +63,15 @@ def load_debian_issue(f):
         issue['comments'] = dict((name, '\n'.join(lines))
                                  for (name, lines) in comments.items())
 
+    def get_fixes(match):
+        # These are *usually* git commit hashes but could be patch names
+        hashes = [ref
+                  for ref in COMMA_SEP_RE.split(match.group('changerefs'))
+                  if kernel_sec.issue.change_is_git_hash(ref)]
+        if hashes:
+            return hashes
+        return None
+
     # Branch status
     for key in deb_issue:
         if key == 'upstream':
@@ -75,12 +84,9 @@ def load_debian_issue(f):
         if match and \
            match.group('state') in ['pending', 'released'] and \
            match.group('changerefs'):
-            # These are *usually* git commit hashes but could be patch names
-            hashes = [ref
-                      for ref in COMMA_SEP_RE.split(match.group('changerefs'))
-                      if kernel_sec.issue.change_is_git_hash(ref)]
-            if hashes:
-                issue.setdefault('fixed-by', {})[branch] = hashes
+            fixes = get_fixes(match)
+            if fixes:
+                issue.setdefault('fixed-by', {})[branch] = fixes
         if match and \
            match.group('state') == 'ignored' and \
            match.group('reason'):
