@@ -39,7 +39,7 @@
       {{ handle }}
     </th>
     <td>
-      <q>{{ issue.comments[handle] }}</q>
+      <pre>{{ issue.comments[handle] | linkify }}</pre>
     </td>
     {% if not loop.last %}
   </tr>

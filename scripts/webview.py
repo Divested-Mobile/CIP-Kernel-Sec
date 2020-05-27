@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2018-2019 Codethink Ltd.
+# Copyright 2018-2020 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
@@ -12,6 +12,7 @@ import re
 
 import cherrypy
 import jinja2
+import markupsafe
 
 import kernel_sec.branch
 import kernel_sec.issue
@@ -34,10 +35,46 @@ def _url_abbrev(value):
         return match.expand(r'\1\3\5')
 
 
+_LINKIFY_RE = re.compile(r'\b(?P<label>'
+                         r'(?P<url>https?://[^>\)\]"\s]+)'
+                         r'|(?P<issue>CVE-[-0-9]+)\b'
+                         r'|(?P<commit>[0-9a-f]{7,})\b'
+                         r')')
+
+
+@jinja2.evalcontextfilter
+def _linkify(context, value):
+    from markupsafe import escape, Markup
+
+    results = []
+    pos = 0
+
+    # Create links for link-ish text and escape everything else
+    for match in _LINKIFY_RE.finditer(value):
+        results.append(escape(value[pos:match.start()]))
+        pos = match.end()
+        if match.group('url'):
+            url = match.group('url')
+        elif match.group('issue'):
+            url = '/issue/%s/' % match.group('issue')
+        else:
+            url = _LINKIFY_COMMIT_PREFIX + match.group('commit')
+        results.append('<a href="%s">%s</a>'
+                       % (escape(url), escape(match.group('label'))))
+    results.append(escape(value[pos:]))
+
+    # Concatenate, and inhibit auto-escaping if necessary
+    result = ''.join(results)
+    if context.autoescape:
+        result = Markup(result)
+    return result
+
+
 _template_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader('scripts/templates'),
     autoescape=True)
 _template_env.filters['urlabbrev'] = _url_abbrev
+_template_env.filters['linkify'] = _linkify
 
 
 class IssueCache:
@@ -266,6 +303,7 @@ if __name__ == '__main__':
     remotes = kernel_sec.branch.get_remotes(args.remote_name,
                                             mainline=args.mainline_remote_name,
                                             stable=args.stable_remote_name)
+    _LINKIFY_COMMIT_PREFIX = remotes['stable']['commit_url_prefix']
     kernel_sec.branch.check_git_repo(args.git_repo, remotes)
 
     conf = {
