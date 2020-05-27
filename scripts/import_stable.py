@@ -27,6 +27,7 @@ BACKPORT_COMMIT_TOP_RE = re.compile(
     .format(**RE_USE))
 BACKPORT_COMMIT_ANYWHERE_RE = re.compile(
     r'^(?:' r'\(cherry[- ]picked from commit ({hash})\)'
+    r'|'    r'\(backported from(?: commit)? ({hash})\b.*'  # Ubuntu
     r')$'
     .format(**RE_USE))
 
@@ -59,7 +60,7 @@ def get_backports(git_repo, branches, debug=False):
                 body_line_no = 1
             else:
                 match = ((BACKPORT_COMMIT_TOP_RE.match(line[1:])
-                          if body_line_no == 1 else None)
+                          if body_line_no <= 3 else None)
                          or BACKPORT_COMMIT_ANYWHERE_RE.match(line[1:]))
                 if match:
                     mainline_commit = ''.join(match.groups(''))
