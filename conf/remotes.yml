@@ -7,3 +7,19 @@ stable:
 cip:
   commit_url_prefix: https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git/commit?id=
   git_repo_url: https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
+ubuntu/xenial:
+  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial/commit/?id=
+  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial/tag/?h=
+  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial
+ubuntu/bionic:
+  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic/commit/?id=
+  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic/tag/?h=
+  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic
+ubuntu/eoan:
+  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/eoan/commit/?id=
+  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/eoan/tag/?h=
+  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/eoan
+ubuntu/focal:
+  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal/commit/?id=
+  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal/tag/?h=
+  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal
