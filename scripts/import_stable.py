@@ -22,12 +22,12 @@ RE_USE = {'hash': r'[0-9a-f]{40}'}
 BACKPORT_COMMIT_TOP_RE = re.compile(
     r'^(?:' r'commit ({hash})(?: upstream\.?)?'
     r'|'    r'\[ [Uu]pstream commit ({hash}) \]'
-    r'|'    r'\(cherry[- ]picked from commit ({hash})\)'
     r'|'    r'\[ commit ({hash}) upstream \]'
     r')$'
     .format(**RE_USE))
-BACKPORT_COMMIT_BOTTOM_RE = re.compile(
-    r'^\(cherry[- ]picked from commit ({hash})\)$'
+BACKPORT_COMMIT_ANYWHERE_RE = re.compile(
+    r'^(?:' r'\(cherry[- ]picked from commit ({hash})\)'
+    r')$'
     .format(**RE_USE))
 
 
@@ -56,9 +56,11 @@ def get_backports(git_repo, branches, debug=False):
                                      errors='ignore'):
             if line[0] != ' ':
                 stable_commit = line.rstrip('\n')
-                commit_re = BACKPORT_COMMIT_TOP_RE  # next line is top of body
+                body_line_no = 1
             else:
-                match = commit_re.match(line[1:])
+                match = ((BACKPORT_COMMIT_TOP_RE.match(line[1:])
+                          if body_line_no == 1 else None)
+                         or BACKPORT_COMMIT_ANYWHERE_RE.match(line[1:]))
                 if match:
                     mainline_commit = ''.join(match.groups(''))
                     if debug:
@@ -67,8 +69,7 @@ def get_backports(git_repo, branches, debug=False):
                     backports.setdefault(mainline_commit, {})[branch_name] \
                         = stable_commit
                 if line.strip() != '':
-                    # next line is not top
-                    commit_re = BACKPORT_COMMIT_BOTTOM_RE
+                    body_line_no += 1
 
     return backports
 
