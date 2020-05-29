@@ -18,6 +18,8 @@ import kernel_sec.branch
 
 
 def main(git_repo, remotes):
+    branches = kernel_sec.branch.get_live_branches(remotes)
+
     if os.path.isdir(git_repo):
         existing_remotes = set(kernel_sec.branch.remote_list(git_repo))
     else:
@@ -28,14 +30,34 @@ def main(git_repo, remotes):
     for key in remotes.keys():
         remote = remotes[key]  # __getitem__ will add git_name
         remote_name = remote['git_name']
+        wanted_branches = set(branch['git_name']
+                              for branch in branches
+                              if branch.get('git_remote') is remote)
+        if len(wanted_branches) == 0:
+            continue
+
+        # Some branches will be *extremely* slow to fetch initially
+        # without this
+        fetch_nego_algo = 'skipping'
+
         if remote_name in existing_remotes:
-            fetch_nego_algo = 'default'
+            # Enable fetching wanted branches, but keep any
+            # additional locally configured branches
+            existing_branches = set(
+                kernel_sec.branch.remote_get_fetched_branches(
+                    git_repo, remote_name))
+            if '*' in existing_branches \
+               or wanted_branches.issubset(existing_branches):
+                fetch_nego_algo = 'default'
+            else:
+                kernel_sec.branch.remote_add_branches(
+                    git_repo, remote_name,
+                    wanted_branches - existing_branches)
         else:
             kernel_sec.branch.remote_add(
-                git_repo, remote_name, remote['git_repo_url'])
-            # Some remotes will be *extremely* slow to fetch
-            # initially without this
-            fetch_nego_algo = 'skipping'
+                git_repo, remote_name, remote['git_repo_url'],
+                [] if remote_name == 'stable' else wanted_branches)
+
         kernel_sec.branch.remote_update(git_repo, remote_name,
                                         fetch_nego_algo=fetch_nego_algo)
 

@@ -254,8 +254,40 @@ def remote_update(git_repo, remote_name, fetch_nego_algo='default'):
         cwd=git_repo)
 
 
-def remote_add(git_repo, remote_name, remote_url):
-    subprocess.check_call(['git', 'remote', 'add', remote_name, remote_url],
+def remote_add(git_repo, remote_name, remote_url, branches=[]):
+    argv = ['git', 'remote', 'add']
+    for branch in branches:
+        argv.extend(['-t', branch])
+    argv.extend([remote_name, remote_url])
+    subprocess.check_call(argv, cwd=git_repo)
+
+
+def remote_get_fetched_branches(git_repo, remote_name):
+    branches = []
+
+    # Use git config to read the configured branches, because 'git
+    # remote show' only shows the existing fetched branches and
+    # doesn't show whether a wildcard is configured
+    remote_ref_prefix = 'refs/heads/'
+    local_ref_prefix = 'refs/remotes/%s/' % remote_name
+    with subprocess.Popen(['git', 'config', '--local', '--get-all',
+                           'remote.%s.fetch' % remote_name],
+                          cwd=git_repo, stdout=subprocess.PIPE, text=True) \
+                          as proc:
+        for line in proc.stdout:
+            remote_ref, local_ref = line.rstrip('\n').lstrip('+').split(':', 1)
+            if remote_ref.startswith(remote_ref_prefix) \
+               and local_ref.startswith(local_ref_prefix) \
+               and (remote_ref[len(remote_ref_prefix):] == \
+                    local_ref[len(local_ref_prefix):]):
+                branches.append(remote_ref[len(remote_ref_prefix):])
+
+    return branches
+
+
+def remote_add_branches(git_repo, remote_name, branches):
+    subprocess.check_call(['git', 'remote', 'set-branches', '--add',
+                           remote_name] + list(branches),
                           cwd=git_repo)
 
 
