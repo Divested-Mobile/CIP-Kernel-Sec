@@ -247,9 +247,11 @@ def remote_list(git_repo):
                      .strip().split('\n')
 
 
-def remote_update(git_repo, remote_name):
-    subprocess.check_call(['git', 'remote', 'update', remote_name],
-                          cwd=git_repo)
+def remote_update(git_repo, remote_name, fetch_nego_algo='default'):
+    subprocess.check_call(
+        ['git', '-c', 'fetch.negotiationAlgorithm=' + fetch_nego_algo,
+         'remote', 'update', remote_name],
+        cwd=git_repo)
 
 
 def remote_add(git_repo, remote_name, remote_url):

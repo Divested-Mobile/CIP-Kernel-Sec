@@ -29,11 +29,15 @@ def main(git_repo, remotes):
         remote = remotes[key]  # __getitem__ will add git_name
         remote_name = remote['git_name']
         if remote_name in existing_remotes:
-            pass
+            fetch_nego_algo = 'default'
         else:
             kernel_sec.branch.remote_add(
                 git_repo, remote_name, remote['git_repo_url'])
-        kernel_sec.branch.remote_update(git_repo, remote_name)
+            # Some remotes will be *extremely* slow to fetch
+            # initially without this
+            fetch_nego_algo = 'skipping'
+        kernel_sec.branch.remote_update(git_repo, remote_name,
+                                        fetch_nego_algo=fetch_nego_algo)
 
     # self-check
     kernel_sec.branch.check_git_repo(git_repo, remotes)
