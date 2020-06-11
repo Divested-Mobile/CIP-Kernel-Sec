@@ -68,7 +68,7 @@ def load_debian_issue(f):
         if key == 'upstream':
             branch = 'mainline'
         elif key.endswith('-upstream-stable'):
-            branch = 'linux-%s.y' % key.replace('-upstream-stable', '')
+            branch = 'stable/' + key.replace('-upstream-stable', '')
         else:
             continue
         match = STATUS_RE.match(deb_issue[key])

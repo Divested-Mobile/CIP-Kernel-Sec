@@ -22,12 +22,11 @@ from . import version
 
 
 def get_base_ver_stable_branch(base_ver):
-    branch_name = 'linux-%s.y' % base_ver
     esc_base_ver = re.escape(base_ver)
     return {
-        'short_name': branch_name,
+        'short_name': 'stable/%s' % base_ver,
         'git_remote': 'stable',
-        'git_name': branch_name,
+        'git_name': 'linux-%s.y' % base_ver,
         'base_ver': base_ver,
         'tag_regexp' : r'(^v%s$|^v%s\.\d+$)' % (esc_base_ver, esc_base_ver)
         }
@@ -87,6 +86,9 @@ def _get_live_stable_branches():
         with open('import/stable_branches.yml') as f:
             branches = yaml.safe_load(f)
             cache_time = os.stat(f.fileno()).st_mtime
+        if branches and not branches[0]['short_name'].startswith('stable/'):
+            branches = None
+            cache_time = None
     except IOError:
         branches = None
         cache_time = None

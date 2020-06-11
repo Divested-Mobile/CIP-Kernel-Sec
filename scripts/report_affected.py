@@ -26,8 +26,8 @@ def main(git_repo, remotes, only_fixed_upstream,
         for branch_name in branch_names:
             tag = None
             if branch_name[0].isdigit():
-                # 4.4 is mapped to linux-4.4.y
-                name = 'linux-%s.y' % branch_name
+                # 4.4 is mapped to stable/4.4
+                name = 'stable/' + branch_name
             elif branch_name[0] == 'v':
                 # an official tag, e.g. v4.4.92-cip11
                 # infer branch from tag (regexp's must be specific)
@@ -44,7 +44,7 @@ def main(git_repo, remotes, only_fixed_upstream,
                 else:
                     raise ValueError('Failed to match tag %r' % branch_name)
             elif ':' in branch_name:
-                # a possibly custom tag, e.g. linux-4.19.y-cip:myproduct-v1
+                # a possibly custom tag, e.g. cip/4.19:myproduct-v1
                 name, tag = branch_name.split(':', 1)
             else:
                 name = branch_name
@@ -163,8 +163,8 @@ if __name__ == '__main__':
                         nargs='*',
                         help=('specific branch[:tag] or stable tag to '
                               'report on (default: all active branches). '
-                              'e.g. linux-4.14.y linux-4.4.y:v4.4.107 '
-                              'v4.4.181-cip33 linux-4.19.y-cip:myproduct-v33'),
+                              'e.g. stable/4.14 stable/4.4:v4.4.107 '
+                              'v4.4.181-cip33 cip/4.19:myproduct-v33'),
                         metavar='[BRANCH[:TAG]|TAG]')
     args = parser.parse_args()
     remotes = kernel_sec.branch.get_remotes(args.remote_name,

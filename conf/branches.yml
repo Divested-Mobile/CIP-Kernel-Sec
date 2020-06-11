@@ -1,19 +1,19 @@
-- short_name: linux-4.4.y-cip
+- short_name: cip/4.4
   base_ver: "4.4"
   git_remote: cip
   git_name: linux-4.4.y-cip
   tag_regexp: '^v4\.4\.\d+-cip\d+$'
-- short_name: linux-4.4.y-cip-rt
+- short_name: cip/4.4-rt
   base_ver: "4.4"
   git_remote: cip
   git_name: linux-4.4.y-cip-rt
   tag_regexp: '^v4\.4\.\d+-cip\d+-rt\d+$'
-- short_name: linux-4.19.y-cip
+- short_name: cip/4.19
   base_ver: "4.19"
   git_remote: cip
   git_name: linux-4.19.y-cip
   tag_regexp: '^v4\.19\.\d+-cip\d+$'
-- short_name: linux-4.19.y-cip-rt
+- short_name: cip/4.19-rt
   base_ver: "4.19"
   git_remote: cip
   git_name: linux-4.19.y-cip-rt
