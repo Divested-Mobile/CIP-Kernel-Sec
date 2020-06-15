@@ -217,11 +217,6 @@ def load_ubuntu_issue(f):
     if 'linux' not in ubu_issue['pkgs']:
         raise NonKernelIssue()
 
-    # Issues with Android in the description almost always refer to things
-    # not in mainline, that we should not track
-    if DESCRIPTION_ANDROID_RE.search(ubu_issue['Description']):
-        raise NonKernelIssue()
-
     issue['description'] = ubu_issue['Description'].strip()
 
     refs = [ref for ref in
@@ -307,6 +302,12 @@ def main():
             except (KeyError, ValueError, UnicodeDecodeError):
                 print('Failed to parse %s' % their_filename, file=sys.stderr)
                 continue
+
+        # Issues with Android in the description almost always refer to things
+        # not in mainline, that we should not track
+        if cve_id not in our_issues \
+           and DESCRIPTION_ANDROID_RE.search(theirs['description']):
+            continue
 
         if cve_id not in our_issues:
             # Copy theirs
