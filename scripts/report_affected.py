@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2017-2018 Codethink Ltd.
+# Copyright 2017-2018,2020 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
@@ -10,8 +10,10 @@
 
 import argparse
 import copy
+import fnmatch
 import subprocess
 import re
+import sys
 
 import kernel_sec.branch
 import kernel_sec.issue
@@ -24,6 +26,17 @@ def main(git_repo, remotes, only_fixed_upstream,
     if branch_names:
         branches = []
         for branch_name in branch_names:
+            if '*' in branch_name or '?' in branch_name:
+                matched = False
+                for branch in live_branches:
+                    if fnmatch.fnmatch(branch['short_name'], branch_name):
+                        branches.append(branch)
+                        matched = True
+                if not matched:
+                    print('W: Branch pattern %s did not match any branches'
+                          % branch_name,
+                          file=sys.stderr)
+                continue
             tag = None
             if branch_name[0].isdigit():
                 # 4.4 is mapped to stable/4.4
@@ -161,8 +174,9 @@ if __name__ == '__main__':
                         help='show the issue description')
     parser.add_argument('branches',
                         nargs='*',
-                        help=('specific branch[:tag] or stable tag to '
-                              'report on (default: all active branches). '
+                        help=('specific branch[:tag], branch pattern, '
+                              'or stable tag to report on '
+                              '(default: all active branches). '
                               'e.g. stable/4.14 stable/4.4:v4.4.107 '
                               'v4.4.181-cip33 cip/4.19:myproduct-v33'),
                         metavar='[BRANCH[:TAG]|TAG]')
