@@ -22,21 +22,25 @@ import kernel_sec.version
 
 def main(git_repo, remotes, only_fixed_upstream,
          include_ignored, show_description, *branch_names):
+    if not branch_names:
+        branch_names = ['stable/*']
+        if not only_fixed_upstream:
+            branch_names.append('mainline')
+
     live_branches = kernel_sec.branch.get_live_branches(remotes)
-    if branch_names:
-        branches = []
-        for branch_name in branch_names:
-            if '*' in branch_name or '?' in branch_name:
-                matched = False
-                for branch in live_branches:
-                    if fnmatch.fnmatch(branch['short_name'], branch_name):
-                        branches.append(branch)
-                        matched = True
-                if not matched:
-                    print('W: Branch pattern %s did not match any branches'
-                          % branch_name,
-                          file=sys.stderr)
-                continue
+    branches = []
+    for branch_name in branch_names:
+        if '*' in branch_name or '?' in branch_name:
+            matched = False
+            for branch in live_branches:
+                if fnmatch.fnmatch(branch['short_name'], branch_name):
+                    branches.append(branch)
+                    matched = True
+            if not matched:
+                print('W: Branch pattern %s did not match any branches'
+                      % branch_name,
+                      file=sys.stderr)
+        else:
             tag = None
             if branch_name[0].isdigit():
                 # 4.4 is mapped to stable/4.4
@@ -73,11 +77,6 @@ def main(git_repo, remotes, only_fixed_upstream,
             else:
                 msg = "Branch %s could not be found" % branch_name
                 raise argparse.ArgumentError(None, msg)
-    else:
-        branches = live_branches
-        if only_fixed_upstream:
-            branches = [branch for branch in branches
-                        if branch['short_name'] != 'mainline']
 
     branches.sort(key=kernel_sec.branch.get_sort_key)
 
@@ -176,7 +175,7 @@ if __name__ == '__main__':
                         nargs='*',
                         help=('specific branch[:tag], branch pattern, '
                               'or stable tag to report on '
-                              '(default: all active branches). '
+                              '(default: stable/*, mainline). '
                               'e.g. stable/4.14 stable/4.4:v4.4.107 '
                               'v4.4.181-cip33 cip/4.19:myproduct-v33'),
                         metavar='[BRANCH[:TAG]|TAG]')
