@@ -27,9 +27,9 @@ LINE_BREAK_RE = re.compile(r'\n\s*')
 COMMA_SEP_RE = re.compile(r',\s*')
 COMMENT_RE = re.compile(r'^(\w+)>\s+(.*)$')
 STATUS_RE = re.compile(r'^\s*(?P<state>\S*)'
-                       r'\s*(?:(\((\S*,\s*)*\S*\s*\))?'
-                       r'\s*(\[(?P<changerefs>(\S*,\s*)*\S*)\s*\])'
-                       r'|"(?P<reason>.+)")?')
+                       r'(?:\s*\((\S*,\s*)*\S*\s*\))?'
+                       r'(?:\s*\[(?P<changerefs>(\S*,\s*)*\S*)\s*\])?'
+                       r'(?:\s*"(?P<reason>.+)")?')
 
 
 def load_debian_issue(f):
