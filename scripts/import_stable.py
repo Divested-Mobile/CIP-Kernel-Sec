@@ -22,30 +22,34 @@ RE_USE = {'hash': r'[0-9a-f]{40}'}
 BACKPORT_COMMIT_TOP_RE = re.compile(
     r'^(?:' r'commit ({hash})(?: upstream\.?)?'
     r'|'    r'\[ [Uu]pstream commit ({hash}) \]'
-    r'|'    r'\(cherry[- ]picked from commit ({hash})\)'
     r'|'    r'\[ commit ({hash}) upstream \]'
     r')$'
     .format(**RE_USE))
-BACKPORT_COMMIT_BOTTOM_RE = re.compile(
-    r'^\(cherry[- ]picked from commit ({hash})\)$'
+BACKPORT_COMMIT_ANYWHERE_RE = re.compile(
+    r'^(?:' r'\(cherry[- ]picked from commit ({hash})\)'
+    r'|'    r'\(backported from(?: commit)? ({hash})\b.*'  # Ubuntu
+    r')$'
     .format(**RE_USE))
 
 
-def get_backports(git_repo, remotes, branches, debug=False):
+def get_backports(git_repo, branches, debug=False):
     backports = {}
 
     for branch in branches:
-        branch_name = branch['short_name']
-        if branch_name == 'mainline':
+        # Skip mainline and any branches that we can't access
+        if 'base_ver' not in branch \
+           or 'git_remote' not in branch \
+           or 'git_name' not in branch:
             continue
 
+        branch_name = branch['short_name']
         base_ver = branch['base_ver']
         log_proc = subprocess.Popen(
             # Format with hash on one line, body on following lines indented
             # by 1
             ['git', 'log', '--no-notes', '--pretty=%H%n%w(0,1,1)%b',
              'v%s..%s/%s'
-             % (base_ver, remotes[branch['git_remote']]['git_name'],
+             % (base_ver, branch['git_remote']['git_name'],
                 branch['git_name'])],
             cwd=git_repo, stdout=subprocess.PIPE)
 
@@ -53,9 +57,11 @@ def get_backports(git_repo, remotes, branches, debug=False):
                                      errors='ignore'):
             if line[0] != ' ':
                 stable_commit = line.rstrip('\n')
-                commit_re = BACKPORT_COMMIT_TOP_RE  # next line is top of body
+                body_line_no = 1
             else:
-                match = commit_re.match(line[1:])
+                match = ((BACKPORT_COMMIT_TOP_RE.match(line[1:])
+                          if body_line_no <= 3 else None)
+                         or BACKPORT_COMMIT_ANYWHERE_RE.match(line[1:]))
                 if match:
                     mainline_commit = ''.join(match.groups(''))
                     if debug:
@@ -64,8 +70,7 @@ def get_backports(git_repo, remotes, branches, debug=False):
                     backports.setdefault(mainline_commit, {})[branch_name] \
                         = stable_commit
                 if line.strip() != '':
-                    # next line is not top
-                    commit_re = BACKPORT_COMMIT_BOTTOM_RE
+                    body_line_no += 1
 
     return backports
 
@@ -133,14 +138,15 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
 
 
 def main(git_repo, remotes, debug=False):
-    branches = kernel_sec.branch.get_live_branches()
-    remote_names = set(branch['git_remote'] for branch in branches)
+    branches = kernel_sec.branch.get_live_branches(remotes)
+    remote_names = set(branch['git_remote']['git_name']
+                       for branch in branches
+                       if 'git_remote' in branch)
 
     for remote_name in remote_names:
-        kernel_sec.branch.remote_update(
-            git_repo, remotes[remote_name]['git_name'])
-    backports = get_backports(git_repo, remotes, branches, debug)
-    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remotes, branches)
+        kernel_sec.branch.remote_update(git_repo, remote_name)
+    backports = get_backports(git_repo, branches, debug)
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, branches)
 
     issues = set(kernel_sec.issue.get_list())
     for cve_id in issues:

@@ -1,20 +1,52 @@
-- short_name: linux-4.4.y-cip
+- short_name: cip/4.4
   base_ver: "4.4"
   git_remote: cip
   git_name: linux-4.4.y-cip
   tag_regexp: '^v4\.4\.\d+-cip\d+$'
-- short_name: linux-4.4.y-cip-rt
+- short_name: cip/4.4-rt
   base_ver: "4.4"
   git_remote: cip
   git_name: linux-4.4.y-cip-rt
   tag_regexp: '^v4\.4\.\d+-cip\d+-rt\d+$'
-- short_name: linux-4.19.y-cip
+- short_name: cip/4.19
   base_ver: "4.19"
   git_remote: cip
   git_name: linux-4.19.y-cip
   tag_regexp: '^v4\.19\.\d+-cip\d+$'
-- short_name: linux-4.19.y-cip-rt
+- short_name: cip/4.19-rt
   base_ver: "4.19"
   git_remote: cip
   git_name: linux-4.19.y-cip-rt
   tag_regexp: '^v4\.19\.\d+-cip\d+-rt\d+$'
+- short_name: debian/jessie-security
+  base_ver: "3.16"
+  patch_queue: debian
+  debian_branch_point: 3.16.7-ckt9-2
+- short_name: debian/stretch-security
+  base_ver: "4.9"
+  patch_queue: debian
+  debian_branch_point: 4.9.30-2
+- short_name: debian/buster-security
+  base_ver: "4.19"
+  patch_queue: debian
+  debian_branch_point: 4.19.37-5
+- short_name: ubuntu/xenial
+  base_ver: "4.4"
+  git_remote: ubuntu/xenial
+  git_name: master-next
+  tag_regexp: '^Ubuntu-4\.4\.'
+- short_name: ubuntu/bionic
+  base_ver: "4.15"
+  git_remote: ubuntu/bionic
+  git_name: master-next
+  tag_regexp: '^Ubuntu-4\.15\.'
+- short_name: ubuntu/eoan
+  base_ver: "5.3"
+  git_remote: ubuntu/eoan
+  git_name: master-next
+  tag_regexp: '^Ubuntu-5\.3\.'
+- short_name: ubuntu/focal
+  base_ver: "5.4"
+  git_remote: ubuntu/focal
+  git_name: master-next
+  tag_regexp: '^Ubuntu-5\.4\.'

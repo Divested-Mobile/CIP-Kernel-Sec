@@ -11,6 +11,7 @@
 # roughly documented in the README file.  See also the load_cve()
 # function in scripts/cve_lib.py.
 
+import argparse
 import datetime
 import glob
 import os
@@ -20,6 +21,7 @@ import shutil
 import subprocess
 import sys
 
+import kernel_sec.branch
 import kernel_sec.issue
 
 
@@ -30,6 +32,7 @@ BREAK_FIX_RE = re.compile(r'^break-fix: (?:([0-9a-f]{40})|[-\w]+)'
 DISCOVERED_BY_SEP_RE = re.compile(r'(?:,\s*(?:and\s+)?|\s+and\s+)')
 COMMENT_RE = re.compile(r'^(\w+)>\s+(.*)$')
 DESCRIPTION_ANDROID_RE = re.compile(r'\bAndroid\b')
+VERSION_RE = re.compile(r'^\d[-\d.]+$')
 
 
 # Based on load_cve() in scripts/cve_lib.py
@@ -208,7 +211,7 @@ class NonKernelIssue(Exception):
     pass
 
 
-def load_ubuntu_issue(f):
+def load_ubuntu_issue(f, branches):
     ubu_issue = load_cve(f)
     issue = {}
 
@@ -227,13 +230,13 @@ def load_ubuntu_issue(f):
         issue['references'] = refs
 
     comments = {}
-    name = 'Ubuntu'
+    name = 'ubuntu'
     for line in ubu_issue['Notes'].split('\n'):
         if not line:
             continue
         match = COMMENT_RE.match(line)
         if match:
-            name = 'Ubuntu-' + match.group(1)
+            name = 'ubuntu/' + match.group(1)
             rest = match.group(2)
         else:
             rest = line
@@ -253,7 +256,58 @@ def load_ubuntu_issue(f):
     if match and match.group(2):
         issue.setdefault('fixed-by', {})['mainline'] = [match.group(2)]
 
+    for branch in branches:
+        branch_name = branch['short_name']
+        assert branch_name.startswith('ubuntu/')
+        branch_state, branch_notes = \
+            ubu_issue['pkgs']['linux'].get(branch_name[7:], (None, None))
+        if branch_state in ['released', 'not-affected'] \
+           and VERSION_RE.match(branch_notes):
+            # Just record the version for now.  This can hopefully be
+            # converted into a list of commits by the find_commits()
+            # function.  Note that this is usually the first version
+            # that is fixed *and* was released to users.
+            issue.setdefault('fixed-by', {})[branch_name] = \
+                ['version:' + branch_notes]
+
     return issue
+
+
+def find_commits(cve_id, issue, git_repo, branches):
+    fixes = issue.get('fixed-by', {})
+
+    for branch in branches:
+        branch_name = branch['short_name']
+        if branch_name not in fixes:
+            continue
+
+        # Get the tag for the fixed and released version
+        assert fixes[branch_name][0].startswith('version:')
+        fixrel_version = fixes[branch_name][0][8:]
+        fixrel_tag = 'Ubuntu-' + fixrel_version
+
+        # Find commits before that tag that mention the CVE ID.  We
+        # don't want to look back through the whole history as that's
+        # a waste of time, but we also shouldn't stop at the previous
+        # tag since the fix might be older than that.  As a heuristic,
+        # limit to 90 days before the fixed version.
+        try:
+            fixrel_time = int(
+                subprocess.check_output(
+                    ['git', 'show', '--pretty=%ct', '--no-patch',
+                     fixrel_tag + '^{commit}'],
+                    cwd=git_repo, stderr=subprocess.DEVNULL, text=True) \
+                .strip())
+        except subprocess.CalledProcessError:
+            # Version doesn't seem to exist
+            del fixes[branch_name]
+        else:
+            fix_rev_list = subprocess.check_output(
+                ['git', 'rev-list', '--reverse', '--grep', cve_id, '-w',
+                 '--since', str(fixrel_time - 90 * 86400), fixrel_tag],
+                cwd=git_repo, text=True)
+            if fix_rev_list:
+                fixes[branch_name] = fix_rev_list.strip().split()
 
 
 # Ubuntu doesn't seem to retire issues any more, so only include issues
@@ -267,7 +321,11 @@ def get_recent_issues():
             yield (cve_id, filename)
 
 
-def main():
+def main(git_repo, remotes):
+    branches = [branch
+                for branch in kernel_sec.branch.get_live_branches(remotes)
+                if branch['short_name'].startswith('ubuntu/')]
+
     # Remove obsolete Bazaar-NG repository
     if os.path.isdir(IMPORT_DIR + '/.bzr'):
         shutil.rmtree(IMPORT_DIR)
@@ -296,7 +354,7 @@ def main():
         their_filename = their_issues[cve_id]
         with open(their_filename, encoding='utf-8') as f:
             try:
-                theirs = load_ubuntu_issue(f)
+                theirs = load_ubuntu_issue(f, branches)
             except NonKernelIssue:
                 continue
             except (KeyError, ValueError, UnicodeDecodeError):
@@ -308,6 +366,8 @@ def main():
         if cve_id not in our_issues \
            and DESCRIPTION_ANDROID_RE.search(theirs['description']):
             continue
+
+        find_commits(cve_id, theirs, git_repo, branches)
 
         if cve_id not in our_issues:
             # Copy theirs
@@ -329,4 +389,18 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(
+        description=('Import information about fixes and regressions from '
+                     'Ubuntu security tracker.'))
+    parser.add_argument('--git-repo',
+                        dest='git_repo', default='../kernel',
+                        help=('git repository from which to read commit logs '
+                              '(default: ../kernel)'),
+                        metavar='DIRECTORY')
+    parser.add_argument('--remote-name',
+                        dest='remote_name', action='append', default=[],
+                        help='git remote name mappings, e.g. stable:mystable',
+                        metavar='NAME:OTHER-NAME')
+    args = parser.parse_args()
+    remotes = kernel_sec.branch.get_remotes(args.remote_name)
+    main(args.git_repo, remotes)

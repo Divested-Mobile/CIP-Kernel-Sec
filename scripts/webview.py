@@ -8,7 +8,9 @@
 
 import argparse
 import os
+import posixpath
 import re
+import urllib.parse
 
 import cherrypy
 import jinja2
@@ -16,6 +18,9 @@ import markupsafe
 
 import kernel_sec.branch
 import kernel_sec.issue
+from kernel_sec.issue \
+    import change_is_git_hash, change_is_patch, change_patch_info, \
+    change_is_version, change_version_tag
 
 
 # Match host part and either query part or last path part
@@ -70,11 +75,52 @@ def _linkify(context, value):
     return result
 
 
+def _change_url(change, branch):
+    if change_is_git_hash(change):
+        return branch['git_remote']['commit_url_prefix'] + change
+
+    if change_is_patch(change):
+        ref_name, file_name = change_patch_info(change)
+        return branch['patch_queue']['patch_url_format'].format(
+            ref_name=urllib.parse.quote(ref_name),
+            file_name=urllib.parse.quote(file_name),
+            base_ver=urllib.parse.quote(branch.get('base_ver')))
+
+    if change_is_version(change):
+        if 'git_remote' in branch:
+            return branch['git_remote']['tag_url_prefix'] \
+                + urllib.parse.quote(change_version_tag(change))
+        if 'patch_queue' in branch:
+            return branch['patch_queue']['tag_url_prefix'] \
+                + urllib.parse.quote(change_version_tag(change))
+
+    return None
+
+
+def _change_abbrev(change):
+    if change_is_git_hash(change):
+        return change[:12]
+
+    if change_is_patch(change):
+        _, file_name = change_patch_info(change)
+        file_basename = posixpath.basename(file_name)
+        if file_basename == file_name:
+            return file_name
+        return '…/' + file_basename
+
+    if change_is_version(change):
+        return change_version_tag(change)
+
+    return None
+
+
 _template_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader('scripts/templates'),
     autoescape=True)
 _template_env.filters['urlabbrev'] = _url_abbrev
 _template_env.filters['linkify'] = _linkify
+_template_env.filters['change_url'] = _change_url
+_template_env.filters['change_abbrev'] = _change_abbrev
 
 
 class IssueCache:
@@ -142,8 +188,10 @@ class Branches:
         self._root = root
 
     def _cp_dispatch(self, vpath):
-        if len(vpath) == 1 and vpath[0] in self._root.branch_names:
-            return Branch(vpath.pop(), self._root)
+        if len(vpath) == 1:
+            branch_name = urllib.parse.unquote(vpath[0])
+            if branch_name in self._root.branch_names:
+                return Branch(branch_name, self._root)
         return vpath
 
     @cherrypy.expose
@@ -170,8 +218,7 @@ class Issue:
                      issue, self._root.branch_defs[branch_name],
                      self._root.is_commit_in_branch))
                 for branch_name in self._root.branch_names
-            ],
-            remotes=self._root.remotes)
+            ])
 
 
 class OpenIssues:
@@ -240,7 +287,7 @@ class Root:
     def __init__(self, git_repo, remotes):
         self.remotes = remotes
 
-        branch_defs = kernel_sec.branch.get_live_branches()
+        branch_defs = kernel_sec.branch.get_live_branches(remotes)
         self.branch_names = [
             branch['short_name']
             for branch in sorted(branch_defs,
@@ -250,8 +297,7 @@ class Root:
             branch['short_name']: branch for branch in branch_defs
         }
 
-        c_b_map = kernel_sec.branch.CommitBranchMap(
-            git_repo, remotes, branch_defs)
+        c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, branch_defs)
         self.is_commit_in_branch = c_b_map.is_commit_in_branch
 
         self.branches = Branches(self)

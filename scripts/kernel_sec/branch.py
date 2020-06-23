@@ -1,4 +1,4 @@
-# Copyright 2017-2018 Codethink Ltd.
+# Copyright 2017-2018,2020 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
@@ -21,15 +21,15 @@ import yaml
 from . import version
 
 
-def get_base_ver_stable_branch(base_ver):
-    branch_name = 'linux-%s.y' % base_ver
+def _get_base_ver_stable_branch(base_ver):
     esc_base_ver = re.escape(base_ver)
     return {
-        'short_name': branch_name,
+        'short_name': 'stable/%s' % base_ver,
         'git_remote': 'stable',
-        'git_name': branch_name,
+        'git_name': 'linux-%s.y' % base_ver,
         'base_ver': base_ver,
-        'tag_regexp' : r'(^v%s$|^v%s\.\d+$)' % (esc_base_ver, esc_base_ver)
+        'tag_regexp' : r'(^v%s$|^v%s\.\d+$)' % (esc_base_ver, esc_base_ver),
+        'patch_queue': 'stable-queue',
         }
 
 
@@ -77,7 +77,7 @@ def _extract_live_stable_branches(doc):
         if not match:
             raise ValueError('failed to parse stable version %r' % version)
 
-        branches.append(get_base_ver_stable_branch(match.group(1)))
+        branches.append(_get_base_ver_stable_branch(match.group(1)))
 
     return branches
 
@@ -87,6 +87,9 @@ def _get_live_stable_branches():
         with open('import/stable_branches.yml') as f:
             branches = yaml.safe_load(f)
             cache_time = os.stat(f.fileno()).st_mtime
+        if branches and not branches[0]['short_name'].startswith('stable/'):
+            branches = None
+            cache_time = None
     except IOError:
         branches = None
         cache_time = None
@@ -121,7 +124,15 @@ def _get_configured_branches(filename):
         return []
 
 
-def get_live_branches():
+def _get_configured_patch_queues(filename):
+    try:
+        with open(filename) as f:
+            return yaml.safe_load(f)
+    except IOError:
+        return {}
+
+
+def get_live_branches(remotes):
     branches = _get_live_stable_branches()
     branches.extend(_get_configured_branches('conf/branches.yml'))
     branches.extend(
@@ -132,6 +143,19 @@ def get_live_branches():
         'git_remote': 'torvalds',
         'git_name': 'master'
         })
+
+    patch_queues = _get_configured_patch_queues('conf/patch-queues.yml')
+    patch_queues.update(
+        _get_configured_patch_queues(
+            os.path.expanduser('~/.config/kernel-sec/patch-queues.yml')))
+
+    # Replace remote and patch queue names with references to config
+    for branch in branches:
+        if 'git_remote' in branch:
+            branch['git_remote'] = remotes[branch['git_remote']]
+        if 'patch_queue' in branch:
+            branch['patch_queue'] = patch_queues[branch['patch_queue']]
+
     return branches
 
 
@@ -156,7 +180,7 @@ def iter_rev_list(git_repo, end, start=None):
 
 
 class CommitBranchMap:
-    def __init__(self, git_repo, remotes, branches):
+    def __init__(self, git_repo, branches):
         # Generate sort key for each branch
         self._branch_sort_key = {
             branch['short_name']: get_sort_key(branch) for branch in branches
@@ -168,7 +192,7 @@ class CommitBranchMap:
         for branch in sorted(branches, key=get_sort_key):
             branch_name = branch['short_name']
             if branch_name == 'mainline':
-                end = '%s/%s' % (remotes[branch['git_remote']]['git_name'],
+                end = '%s/%s' % (branch['git_remote']['git_name'],
                                  branch['git_name'])
             else:
                 end = 'v' + branch['base_ver']
@@ -217,13 +241,53 @@ def get_remotes(mappings, mainline=None, stable=None):
     return remotes
 
 
-def remote_update(git_repo, remote_name):
-    subprocess.check_call(['git', 'remote', 'update', remote_name],
-                          cwd=git_repo)
+def remote_list(git_repo):
+    return subprocess.check_output(['git', 'remote'],
+                                   cwd=git_repo, text=True) \
+                     .strip().split('\n')
 
 
-def remote_add(git_repo, remote_name, remote_url):
-    subprocess.check_call(['git', 'remote', 'add', remote_name, remote_url],
+def remote_update(git_repo, remote_name, fetch_nego_algo='default'):
+    subprocess.check_call(
+        ['git', '-c', 'fetch.negotiationAlgorithm=' + fetch_nego_algo,
+         'remote', 'update', remote_name],
+        cwd=git_repo)
+
+
+def remote_add(git_repo, remote_name, remote_url, branches=[]):
+    argv = ['git', 'remote', 'add']
+    for branch in branches:
+        argv.extend(['-t', branch])
+    argv.extend([remote_name, remote_url])
+    subprocess.check_call(argv, cwd=git_repo)
+
+
+def remote_get_fetched_branches(git_repo, remote_name):
+    branches = []
+
+    # Use git config to read the configured branches, because 'git
+    # remote show' only shows the existing fetched branches and
+    # doesn't show whether a wildcard is configured
+    remote_ref_prefix = 'refs/heads/'
+    local_ref_prefix = 'refs/remotes/%s/' % remote_name
+    with subprocess.Popen(['git', 'config', '--local', '--get-all',
+                           'remote.%s.fetch' % remote_name],
+                          cwd=git_repo, stdout=subprocess.PIPE, text=True) \
+                          as proc:
+        for line in proc.stdout:
+            remote_ref, local_ref = line.rstrip('\n').lstrip('+').split(':', 1)
+            if remote_ref.startswith(remote_ref_prefix) \
+               and local_ref.startswith(local_ref_prefix) \
+               and (remote_ref[len(remote_ref_prefix):] == \
+                    local_ref[len(local_ref_prefix):]):
+                branches.append(remote_ref[len(remote_ref_prefix):])
+
+    return branches
+
+
+def remote_add_branches(git_repo, remote_name, branches):
+    subprocess.check_call(['git', 'remote', 'set-branches', '--add',
+                           remote_name] + list(branches),
                           cwd=git_repo)
 
 

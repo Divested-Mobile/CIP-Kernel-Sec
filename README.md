@@ -67,7 +67,8 @@ contain a sequence of entries, where each entry is a mapping with the
 keys:
 
 * `short_name`: Name used for the branch in issues and in the user
-  interface.
+  interface.  Branches can be named in a hierarchical fashion
+  with '/' as the hierarchy separator.
 * `git_name`: Default git remote name used for the branch.
 * `git_branch`: Git remote branch name.
 * `base_ver`: Stable version that the branch is based on, e.g.

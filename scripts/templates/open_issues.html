@@ -12,7 +12,8 @@
 		onclick="collapse_class('col{{ loop.index }}')">
 	  -
 	</button>
-	<a class="expanded" href="/branch/{{ name }}/">{{ name }}</a>
+	<a class="expanded"
+	   href="/branch/{{ name | urlencode | replace('/', '%2F')  }}/">{{ name }}</a>
 	<button class="collapsed compact" type="button"
 		onclick="expand_class('col{{ loop.index }}')"
 		title="{{ name }}">

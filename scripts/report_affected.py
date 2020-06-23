@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright 2017-2018 Codethink Ltd.
+# Copyright 2017-2018,2020 Codethink Ltd.
 #
 # This script is distributed under the terms and conditions of the GNU General
 # Public License, Version 3 or later. See http://www.gnu.org/copyleft/gpl.html
@@ -10,8 +10,10 @@
 
 import argparse
 import copy
+import fnmatch
 import subprocess
 import re
+import sys
 
 import kernel_sec.branch
 import kernel_sec.issue
@@ -20,14 +22,29 @@ import kernel_sec.version
 
 def main(git_repo, remotes, only_fixed_upstream,
          include_ignored, show_description, *branch_names):
-    live_branches = kernel_sec.branch.get_live_branches()
-    if branch_names:
-        branches = []
-        for branch_name in branch_names:
+    if not branch_names:
+        branch_names = ['stable/*']
+        if not only_fixed_upstream:
+            branch_names.append('mainline')
+
+    live_branches = kernel_sec.branch.get_live_branches(remotes)
+    branches = []
+    for branch_name in branch_names:
+        if '*' in branch_name or '?' in branch_name:
+            matched = False
+            for branch in live_branches:
+                if fnmatch.fnmatch(branch['short_name'], branch_name):
+                    branches.append(branch)
+                    matched = True
+            if not matched:
+                print('W: Branch pattern %s did not match any branches'
+                      % branch_name,
+                      file=sys.stderr)
+        else:
             tag = None
             if branch_name[0].isdigit():
-                # 4.4 is mapped to linux-4.4.y
-                name = 'linux-%s.y' % branch_name
+                # 4.4 is mapped to stable/4.4
+                name = 'stable/' + branch_name
             elif branch_name[0] == 'v':
                 # an official tag, e.g. v4.4.92-cip11
                 # infer branch from tag (regexp's must be specific)
@@ -44,7 +61,7 @@ def main(git_repo, remotes, only_fixed_upstream,
                 else:
                     raise ValueError('Failed to match tag %r' % branch_name)
             elif ':' in branch_name:
-                # a possibly custom tag, e.g. linux-4.19.y-cip:myproduct-v1
+                # a possibly custom tag, e.g. cip/4.19:myproduct-v1
                 name, tag = branch_name.split(':', 1)
             else:
                 name = branch_name
@@ -60,15 +77,10 @@ def main(git_repo, remotes, only_fixed_upstream,
             else:
                 msg = "Branch %s could not be found" % branch_name
                 raise argparse.ArgumentError(None, msg)
-    else:
-        branches = live_branches
-        if only_fixed_upstream:
-            branches = [branch for branch in branches
-                        if branch['short_name'] != 'mainline']
 
     branches.sort(key=kernel_sec.branch.get_sort_key)
 
-    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, remotes, branches)
+    c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, branches)
 
     # cache tag commits and set full_name to show the tag
     tag_commits = {}
@@ -161,10 +173,11 @@ if __name__ == '__main__':
                         help='show the issue description')
     parser.add_argument('branches',
                         nargs='*',
-                        help=('specific branch[:tag] or stable tag to '
-                              'report on (default: all active branches). '
-                              'e.g. linux-4.14.y linux-4.4.y:v4.4.107 '
-                              'v4.4.181-cip33 linux-4.19.y-cip:myproduct-v33'),
+                        help=('specific branch[:tag], branch pattern, '
+                              'or stable tag to report on '
+                              '(default: stable/*, mainline). '
+                              'e.g. stable/4.14 stable/4.4:v4.4.107 '
+                              'v4.4.181-cip33 cip/4.19:myproduct-v33'),
                         metavar='[BRANCH[:TAG]|TAG]')
     args = parser.parse_args()
     remotes = kernel_sec.branch.get_remotes(args.remote_name,
