@@ -1,3 +1,27 @@
+- base_ver: '3.18'
+  git_name: linux-3.18.y
+  git_remote: stable
+  patch_queue: stable-queue
+  short_name: stable/3.18
+  tag_regexp: (^v3\.18$|^v3\.18\.\d+$)
+- base_ver: '3.10'
+  git_name: linux-3.10.y
+  git_remote: stable
+  patch_queue: stable-queue
+  short_name: stable/3.10
+  tag_regexp: (^v3\.10$|^v3\.10\.\d+$)
+- base_ver: '3.4'
+  git_name: linux-3.4.y
+  git_remote: stable
+  patch_queue: stable-queue
+  short_name: stable/3.4
+  tag_regexp: (^v3\.4$|^v3\.4\.\d+$)
+- base_ver: '3.0'
+  git_name: linux-3.0.y
+  git_remote: stable
+  patch_queue: stable-queue
+  short_name: stable/3.0
+  tag_regexp: (^v3\.0$|^v3\.0\.\d+$)
 - short_name: cip/4.4
   base_ver: "4.4"
   git_remote: cip
