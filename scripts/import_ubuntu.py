@@ -361,10 +361,7 @@ def main(git_repo, remotes):
                 print('Failed to parse %s' % their_filename, file=sys.stderr)
                 continue
 
-        # Issues with Android in the description almost always refer to things
-        # not in mainline, that we should not track
-        if cve_id not in our_issues \
-           and DESCRIPTION_ANDROID_RE.search(theirs['description']):
+        if cve_id not in our_issues:
             continue
 
         find_commits(cve_id, theirs, git_repo, branches)
