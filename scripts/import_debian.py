@@ -79,17 +79,30 @@ def dpkg_version_cmp(left, right):
     return 0
 
 
+def bug_url(ref):
+    try:
+        bug_nr = int(ref)
+    except ValueError:
+        # Not a number: should be a URL already
+        return ref
+    else:
+        # Just a number: return a Debian bug tracker URL
+        return 'https://bugs.debian.org/%d' % bug_nr
+
+
 def load_debian_issue(f, branches):
     deb_issue = deb822.Deb822(f)
     issue = {}
 
     issue['description'] = deb_issue['Description']
 
-    references = [
-        ref for ref in
-        (LINE_BREAK_RE.split(deb_issue['References'].strip()) +
-         LINE_BREAK_RE.split(deb_issue['Bugs'].strip()))
-        if ref]
+    references = \
+        [ref
+         for ref in LINE_BREAK_RE.split(deb_issue['References'].strip())
+         if ref] + \
+        [bug_url(ref)
+         for ref in LINE_BREAK_RE.split(deb_issue['Bugs'].strip())
+         if ref]
     if references:
         issue['references'] = references
 
