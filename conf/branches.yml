@@ -18,6 +18,10 @@
   git_remote: cip
   git_name: linux-4.19.y-cip-rt
   tag_regexp: '^v4\.19\.\d+-cip\d+-rt\d+$'
+- short_name: aosp/3.18
+  base_ver: "3.18"
+  git_remote: aosp
+  git_name: android-3.18
 - short_name: debian/jessie-security
   base_ver: "3.16"
   patch_queue: debian
