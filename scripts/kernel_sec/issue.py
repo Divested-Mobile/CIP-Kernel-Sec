@@ -242,7 +242,7 @@ class _IssueDumper(yaml.dumper.SafeDumper):
 
         return node
 
-    def represent_sequence(self, tag, sequence, flow_style=None):
+    def represent_sequence(self, tag, sequence, flow_style=True):
         # Use block style for top-level fields
         for child in self.__root.values():
             if sequence is child:
