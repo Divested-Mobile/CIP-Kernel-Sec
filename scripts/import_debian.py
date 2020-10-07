@@ -137,15 +137,16 @@ def load_debian_issue(f, branches):
         else:
             assert branch_format == BranchFormat.PATCH_QUEUE
             is_debian = branch_name.startswith('debian/')
+            state = match.group('state')
 
             if is_debian:
-                if match.group('state') == 'released':
+                if state == 'released':
                     version = match.group('version')
                     if version is None or ',' in version or '-' not in version:
                         return None
                     ref_name = 'debian/' + version.replace('~', '_')
                 else:
-                    assert match.group('state') == 'pending'
+                    assert state == 'pending'
                     ref_name = branch_name[7:]
             else:
                 ref_name = 'master'
@@ -156,7 +157,7 @@ def load_debian_issue(f, branches):
                 if patches:
                     return ['patch:%s:%s' % (ref_name, file_name)
                             for file_name in patches]
-            elif is_debian:
+            elif is_debian and state == 'released':
                 # Fixed in this version but without any changes listed.
                 # Probably fixed by importing a newer upstream.
                 return ['version:' + ref_name]
