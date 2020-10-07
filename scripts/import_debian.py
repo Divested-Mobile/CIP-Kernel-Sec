@@ -137,15 +137,16 @@ def load_debian_issue(f, branches):
         else:
             assert branch_format == BranchFormat.PATCH_QUEUE
             is_debian = branch_name.startswith('debian/')
+            state = match.group('state')
 
             if is_debian:
-                if match.group('state') == 'released':
+                if state == 'released':
                     version = match.group('version')
                     if version is None or ',' in version or '-' not in version:
                         return None
                     ref_name = 'debian/' + version.replace('~', '_')
                 else:
-                    assert match.group('state') == 'pending'
+                    assert state == 'pending'
                     ref_name = branch_name[7:]
             else:
                 ref_name = 'master'
