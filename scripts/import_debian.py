@@ -157,7 +157,7 @@ def load_debian_issue(f, branches):
                 if patches:
                     return ['patch:%s:%s' % (ref_name, file_name)
                             for file_name in patches]
-            elif is_debian:
+            elif is_debian and state == 'released':
                 # Fixed in this version but without any changes listed.
                 # Probably fixed by importing a newer upstream.
                 return ['version:' + ref_name]
