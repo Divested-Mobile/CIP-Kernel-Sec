@@ -22,10 +22,6 @@
   base_ver: "3.18"
   git_remote: aosp
   git_name: android-3.18
-- short_name: debian/jessie-security
-  base_ver: "3.16"
-  patch_queue: debian
-  debian_branch_point: 3.16.7-ckt9-2
 - short_name: debian/stretch-security
   base_ver: "4.9"
   patch_queue: debian
