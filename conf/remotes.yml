@@ -18,11 +18,11 @@ ubuntu/bionic:
   commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic/commit/?id=
   tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic/tag/?h=
   git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic
-ubuntu/eoan:
-  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/eoan/commit/?id=
-  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/eoan/tag/?h=
-  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/eoan
 ubuntu/focal:
   commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal/commit/?id=
   tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal/tag/?h=
   git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal
+ubuntu/groovy:
+  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/groovy/commit/?id=
+  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/groovy/tag/?h=
+  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/groovy
