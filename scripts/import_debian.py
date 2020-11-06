@@ -250,14 +250,8 @@ def main():
     our_issues = set(kernel_sec.issue.get_list())
     their_issues = dict((os.path.basename(name), name) for name in
                         glob.glob(IMPORT_DIR + '/active/CVE-*'))
-
-    # Also look at retired issues that we already track, but not the
-    # huge number of historical ones
-    for cve_id in our_issues:
-        if cve_id not in their_issues:
-            retired_name = IMPORT_DIR + '/retired/' + cve_id
-            if os.path.exists(retired_name):
-                their_issues[cve_id] = retired_name
+    their_issues.update((os.path.basename(name), name) for name in
+                        glob.glob(IMPORT_DIR + '/retired/CVE-*'))
 
     for cve_id in their_issues:
         their_filename = their_issues[cve_id]
