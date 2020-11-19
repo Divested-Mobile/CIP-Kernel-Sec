@@ -254,6 +254,9 @@ def main():
     their_issues = dict((os.path.basename(name), name) for name in
                         glob.glob(IMPORT_DIR + '/active/CVE-*'))
 
+    their_issues = dict((os.path.basename(name), name) for name in
+                        glob.glob(IMPORT_DIR + '/retired/CVE-*'))
+
     # Also look at retired issues that we already track, but not the
     # huge number of historical ones
     for cve_id in our_issues:
