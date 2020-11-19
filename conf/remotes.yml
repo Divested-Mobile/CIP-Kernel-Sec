@@ -10,19 +10,3 @@ cip:
 aosp:
   commit_url_prefix: https://android.googlesource.com/kernel/common/+/
   git_repo_url: https://android.googlesource.com/kernel/common.git
-ubuntu/xenial:
-  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial/commit/?id=
-  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial/tag/?h=
-  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial
-ubuntu/bionic:
-  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic/commit/?id=
-  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic/tag/?h=
-  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/bionic
-ubuntu/focal:
-  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal/commit/?id=
-  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal/tag/?h=
-  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/focal
-ubuntu/groovy:
-  commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/groovy/commit/?id=
-  tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/groovy/tag/?h=
-  git_repo_url: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/groovy
