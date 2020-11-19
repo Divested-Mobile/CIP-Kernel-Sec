@@ -51,23 +51,3 @@
   base_ver: "4.19"
   patch_queue: debian
   debian_branch_point: 4.19.37-5
-- short_name: ubuntu/xenial
-  base_ver: "4.4"
-  git_remote: ubuntu/xenial
-  git_name: master-next
-  tag_regexp: '^Ubuntu-4\.4\.'
-- short_name: ubuntu/bionic
-  base_ver: "4.15"
-  git_remote: ubuntu/bionic
-  git_name: master-next
-  tag_regexp: '^Ubuntu-4\.15\.'
-- short_name: ubuntu/focal
-  base_ver: "5.4"
-  git_remote: ubuntu/focal
-  git_name: master-next
-  tag_regexp: '^Ubuntu-5\.4\.'
-- short_name: ubuntu/groovy
-  base_ver: "5.8"
-  git_remote: ubuntu/groovy
-  git_name: master-next
-  tag_regexp: '^Ubuntu-5\.8\.'
