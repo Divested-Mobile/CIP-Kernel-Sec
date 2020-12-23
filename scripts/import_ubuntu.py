@@ -30,7 +30,7 @@ IMPORT_DIR = 'import/ubuntu'
 BREAK_FIX_RE = re.compile(r'^break-fix: (?:([0-9a-f]{40})|[-\w]+)'
                           r' (?:([0-9a-f]{40})|[-\w]+)$')
 DISCOVERED_BY_SEP_RE = re.compile(r'(?:,\s*(?:and\s+)?|\s+and\s+)')
-COMMENT_RE = re.compile(r'^(\w+)>\s+(.*)$')
+COMMENT_RE = re.compile(r'^([\w-]+)>\s+(.*)$')
 DESCRIPTION_ANDROID_RE = re.compile(r'\bAndroid\b')
 VERSION_RE = re.compile(r'^\d[-\d.]+$')
 
