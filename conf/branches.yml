@@ -18,11 +18,6 @@
   git_remote: cip
   git_name: linux-4.19.y-cip-rt
   tag_regexp: '^v4\.19\.\d+-cip\d+-rt\d+$'
-- short_name: cip/5.10
-  base_ver: "5.10"
-  git_remote: cip
-  git_name: linux-5.10.y-cip
-  tag_regexp: '^v5\.10\.\d+-cip\d+$'
 - short_name: aosp/3.18
   base_ver: "3.18"
   git_remote: aosp
