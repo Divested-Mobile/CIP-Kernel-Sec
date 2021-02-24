@@ -193,16 +193,18 @@ def load_debian_issue(f, branches):
         if branch_name not in branches:
             continue
 
-        match = STATUS_RE.match(deb_issue[key])
-        if not match:
-            continue
-        state = match.group('state')
-        if state in ['pending', 'released']:
-            fixes = get_fixes(branch_name, branch_format[state], match)
-            if fixes:
-                issue.setdefault('fixed-by', {})[branch_name] = fixes
-        if state == 'ignored' and match.group('reason'):
-            issue.setdefault('ignore', {})[branch_name] = match.group('reason')
+        # For mainline, multiple releases may be included
+        for release in COMMA_SEP_RE.split(deb_issue[key]):
+            match = STATUS_RE.match(release)
+            if not match:
+                continue
+            state = match.group('state')
+            if state in ['pending', 'released']:
+                fixes = get_fixes(branch_name, branch_format[state], match)
+                if fixes:
+                    issue.setdefault('fixed-by', {}).setdefault(branch_name, []).extend(fixes)
+            if state == 'ignored' and match.group('reason'):
+                issue.setdefault('ignore', {}).setdefault(branch_name, []).extend(match.group('reason'))
 
     # Fill in status for Debian stable branches fixed before the
     # Debian branch point.  These will only be explicitly marked as
