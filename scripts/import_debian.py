@@ -32,10 +32,11 @@ BRANCH_RE = re.compile(
     r'^(?:(?P<mainline>upstream)'
     r'|(?P<base_ver>[\d.]+)-(?:upstream-stable|(?P<debian>\w+-security)))$')
 COMMENT_RE = re.compile(r'^(\w+)>\s+(.*)$')
-STATUS_RE = re.compile(r'^\s*(?P<state>\S*)'
+STATUS_RE = re.compile(r'\s*(?P<state>\S*)'
                        r'(?:\s*\((?P<version>(\S*,\s*)*\S*\s*)\))?'
                        r'(?:\s*\[(?P<changerefs>(\S*,\s*)*\S*)\s*\])?'
-                       r'(?:\s*"(?P<reason>.+)")?')
+                       r'(?:\s*"(?P<reason>.+)")?'
+                       r',?')
 
 
 class BranchFormat(Enum):
@@ -194,10 +195,7 @@ def load_debian_issue(f, branches):
             continue
 
         # For mainline, multiple releases may be included
-        for release in COMMA_SEP_RE.split(deb_issue[key]):
-            match = STATUS_RE.match(release)
-            if not match:
-                continue
+        for match in STATUS_RE.finditer(deb_issue[key]):
             state = match.group('state')
             if state in ['pending', 'released']:
                 fixes = get_fixes(branch_name, branch_format[state], match)
