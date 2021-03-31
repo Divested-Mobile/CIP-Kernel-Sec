@@ -194,15 +194,16 @@ def load_debian_issue(f, branches):
         if branch_name not in branches:
             continue
 
-        # For mainline, multiple releases may be included
+        # For mainline, fixes may span multiple releases
         for match in STATUS_RE.finditer(deb_issue[key]):
             state = match.group('state')
             if state in ['pending', 'released']:
                 fixes = get_fixes(branch_name, branch_format[state], match)
                 if fixes:
                     issue.setdefault('fixed-by', {}).setdefault(branch_name, []).extend(fixes)
+            # However, there will be only one "ignored" entry
             if state == 'ignored' and match.group('reason'):
-                issue.setdefault('ignore', {}).setdefault(branch_name, []).extend(match.group('reason'))
+                issue.setdefault('ignore', {})[branch_name] = match.group('reason')
 
     # Fill in status for Debian stable branches fixed before the
     # Debian branch point.  These will only be explicitly marked as
