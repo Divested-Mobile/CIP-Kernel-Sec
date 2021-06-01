@@ -330,14 +330,6 @@ def main(git_repo, remotes):
     if os.path.isdir(IMPORT_DIR + '/.bzr'):
         shutil.rmtree(IMPORT_DIR)
 
-    os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
-    if os.path.isdir(IMPORT_DIR + '/.git'):
-        subprocess.check_call(['git', 'pull'], cwd=IMPORT_DIR)
-    else:
-        subprocess.check_call(['git', 'clone',
-                               'https://git.launchpad.net/ubuntu-cve-tracker',
-                               '.'],
-                              cwd=IMPORT_DIR)
 
     our_issues = set(kernel_sec.issue.get_list())
     their_issues = dict(get_recent_issues())
