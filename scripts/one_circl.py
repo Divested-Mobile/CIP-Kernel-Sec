@@ -4,6 +4,7 @@ import requests
 import json
 import yaml
 import sys
+import os
 
 def parse_one(cve):
     r = requests.get("https://cve.circl.lu/api/cve/"+cve)
@@ -23,11 +24,11 @@ def translate_one(cve):
 
 def write_one(cve):
     s = translate_one(cve)
-    n = "./issues/" + CVE + ".yml"
-    open(n).write(s)
+    n = "./issues/" + cve + ".yml"
+    open(n, 'w').write(s)
     os.system("git add "+n)
 
 
 #cve = "CVE-2008-2544"
-cve = sys.argv[1]
-translate_one(cve)
+for cve in sys.argv[1:]:
+    write_one(cve)
