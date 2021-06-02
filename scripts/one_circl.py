@@ -16,7 +16,9 @@ def parse_one(cve):
 def translate_one(cve):
     j = parse_one(cve)
     y = {}
+    print(cve)
     print(j["summary"])
+    print()
     y["description"] = j["summary"]
     y["references"] = j["references"]
     s = yaml.dump(y)

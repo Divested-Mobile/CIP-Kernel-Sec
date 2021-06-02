@@ -30,5 +30,7 @@ class KernelCVE(IssueList):
         
 i = KernelCVE()
 i.check("5.10")
+i.check("4.19")
+i.check("4.4")
 
 
