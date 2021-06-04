@@ -9,6 +9,8 @@
 # Import information from Debian's kernel-sec repository.  The format is
 # not documented but is based on Debian's variant of RFC822. See
 # active/00boilerplate and scripts/filter-active.py in that repository.
+#
+# May need "pip3 install python-debian"
 
 from debian import deb822
 from enum import Enum
