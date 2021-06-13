@@ -14,6 +14,7 @@ class KernelCVE(IssueList):
     kernel_cves = "../linux_kernel_cves"
 
     def check(m, version):
+        print("\n\n Kernel version " + version + "\n========================")
         path = m.kernel_cves + "/data/" + version + "/" + version + "_CVEs.txt"
         total = 0
         known = 0
