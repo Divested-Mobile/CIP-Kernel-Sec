@@ -23,10 +23,6 @@
   git_remote: cip
   git_name: linux-5.10.y-cip
   tag_regexp: '^v5\.10\.\d+-cip\d+$'
-- short_name: aosp/3.18
-  base_ver: "3.18"
-  git_remote: aosp
-  git_name: android-3.18
 - short_name: debian/stretch-security
   base_ver: "4.9"
   patch_queue: debian
