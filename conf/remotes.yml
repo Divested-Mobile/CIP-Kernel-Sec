@@ -7,9 +7,6 @@ stable:
 cip:
   commit_url_prefix: https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git/commit?id=
   git_repo_url: https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
-aosp:
-  commit_url_prefix: https://android.googlesource.com/kernel/common/+/
-  git_repo_url: https://android.googlesource.com/kernel/common.git
 ubuntu/xenial:
   commit_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial/commit/?id=
   tag_url_prefix: https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/xenial/tag/?h=
