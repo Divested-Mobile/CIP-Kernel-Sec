@@ -28,6 +28,11 @@
   git_remote: cip
   git_name: linux-5.10.y-cip
   tag_regexp: '^v5\.10\.\d+-cip\d+$'
+- short_name: cip/5.10-rt
+  base_ver: "5.10"
+  git_remote: cip
+  git_name: linux-5.10.y-cip-rt
+  tag_regexp: '^v5\.10\.\d+-cip\d+-rt\d+$'
 - short_name: debian/stretch-security
   base_ver: "4.9"
   patch_queue: debian
