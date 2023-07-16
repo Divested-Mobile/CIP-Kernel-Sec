@@ -38,6 +38,11 @@
   git_remote: cip
   git_name: linux-6.1.y-cip
   tag_regexp: '^v6\.1\.\d+-cip\d+$'
+- short_name: cip/6.1-rt
+  base_ver: "6.1"
+  git_remote: cip
+  git_name: linux-6.1.y-cip-rt
+  tag_regexp: '^v6\.1\.\d+-cip\d+-rt\d+$'
 - short_name: debian/stretch-security
   base_ver: "4.9"
   patch_queue: debian
