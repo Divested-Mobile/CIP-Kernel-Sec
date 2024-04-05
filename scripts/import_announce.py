@@ -197,9 +197,10 @@ def load_cve_announce(f, branches, git_repo):
 
             vuln_info[i].append(d)
 
-    if not len(vuln_info[0]) == len(vuln_info[1]) or not len(vuln_info) == 2:
-        print(f"{cve_id} version info is inocorrect")
-        return None
+    #if not len(vuln_info[0]) == len(vuln_info[1]) or not len(vuln_info) == 2:
+    #    print(f"\r{cve_id} only affects to LTS kernel", end='')
+    #    pprint.pprint(vuln_info)
+    #    return None
 
     track_target_versions = []
     for branch in branches: 
@@ -219,9 +220,12 @@ def load_cve_announce(f, branches, git_repo):
     fixedin_mainline = False
 
     for i in range(len(vuln_info[0])):
+        if i >= len(vuln_info[1]):
+            break
+
         # Get major and minor version string
         version = '.'.join(vuln_info[1][i]['version'].split('.')[:2])
-    
+
         # Is this fixed in mainline?
         if vuln_info[1][i]['versionType'] == 'original_commit_for_fix':
             version = 'mainline'
@@ -303,7 +307,7 @@ def main(git_repo):
         # CVE-2021-46922: backport issue. only stable/5.10 is vulnerable.
         # CVE-2021-46926: no fixes tag in commit log.
         # CVE-2023-52525: doesn't have mainline's fixed commit
-        #if not cve_id == "CVE-2021-46961":
+        #if not cve_id == "CVE-2024-26781":
         #    continue
         print(f"\rChecking {cve_id}", end='')
         announce = cve_announces[cve_id]
