@@ -209,7 +209,7 @@ def load_cve_announce(f, branches, git_repo):
     issue = {
         'description': description,
         'references': [
-            f"https://cve.mitre.org/cgi-bin/cvename.cgi?name={cve_id}",
+            f"https://www.cve.org/CVERecord?id={cve_id}",
         ],
         'fixed-by': {},
     }
