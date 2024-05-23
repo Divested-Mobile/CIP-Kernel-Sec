@@ -261,7 +261,7 @@ def load_cve_announce(f, branches, git_repo):
                         version: fixed_commits,
                     }
                 else:
-                    comment += 'Introduced commit is not determined.'
+                    comment += 'There is no mention of the commit that introduced the bug in the CVE announcement.'
 
                 fixed_in_tag = find_first_introduced_version(git_repo, issue['fixed-by']['mainline'][0])
                 comment += f"Fixed in {fixed_in_tag}."
