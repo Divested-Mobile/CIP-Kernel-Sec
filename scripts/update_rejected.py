@@ -59,15 +59,45 @@ def find_rejected_cves():
     return dict((os.path.basename(name.replace('.json', '')), name) for name in
                         glob.glob(IMPORT_DIR + '/cve/rejected/**/CVE-*.json'))
 
-def main():
-    rejected_cves = find_rejected_cves()
+def get_rejected_cves_in_cip_kernel_sec():
+    rejected_files = []
 
-    for cve_id in rejected_cves:
+    files = glob.glob('issues/*.yml')
+    for f  in files:
+        with open(f) as fd:
+            yml = yaml.safe_load(fd.read())
+        if REJECTED_TITLE_PREFIX in yml['description']:
+            rejected_files.append(f)
+
+    return dict((os.path.basename(name.replace('.yml', '')), name) for name in rejected_files)
+
+def rejected_to_published(rejected_in_linux):
+    rejected_in_cip = get_rejected_cves_in_cip_kernel_sec()
+
+    diff = list(rejected_in_cip.keys() - rejected_in_linux.keys())
+    import pprint
+    for cve in diff:
+        with open(rejected_in_cip[cve]) as f:
+            yml = yaml.safe_load(f.read())
+            yml['description'] = yml['description'].replace(f"{REJECTED_TITLE_PREFIX}: ", '')
+            if 'all' in yml['ignore']:
+                if yml['ignore']['all'] == REJECTED_COMMENT:
+                    del yml['ignore']['all']
+            try:
+                kernel_sec.issue.validate(yml)
+            except ValueError as e:
+                print('%s: %s' % (announce, e), file=sys.stderr)
+                continue
+            kernel_sec.issue.save(cve, yml)
+            print(f"Reverted: issues/{cve}.yml")
+
+def published_to_rejected(rejected_in_linux):
+    for cve_id in rejected_in_linux:
         cve_file = f"issues/{cve_id}.yml"
         if os.path.exists(cve_file):
             cve_data = update_cve_data(cve_file)
         else:
-            cve_data = create_new_cve_data(rejected_cves[cve_id])
+            cve_data = create_new_cve_data(rejected_in_linux[cve_id])
 
         if cve_data:
             try:
@@ -76,7 +106,12 @@ def main():
                 print('%s: %s' % (announce, e), file=sys.stderr)
                 continue
             kernel_sec.issue.save(cve_id, cve_data)
-            print(f"Save file issues/{cve_id}.yml")
+            print(f"Rejected: issues/{cve_id}.yml")
+
+def main():
+    rejected_in_linux = find_rejected_cves()
+    published_to_rejected(rejected_in_linux)
+    rejected_to_published(rejected_in_linux)
 
 if __name__ == "__main__":
     main()
