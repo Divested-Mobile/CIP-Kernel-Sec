@@ -137,14 +137,15 @@ def add_backports(branches, c_b_map, issue_commits, all_backports,
     return changed
 
 
-def main(git_repo, remotes, debug=False):
+def main(git_repo, remotes, no_remote_update, debug=False):
     branches = kernel_sec.branch.get_live_branches(remotes)
     remote_names = set(branch['git_remote']['git_name']
                        for branch in branches
                        if 'git_remote' in branch)
 
-    for remote_name in remote_names:
-        kernel_sec.branch.remote_update(git_repo, remote_name)
+    if not no_remote_update:
+        for remote_name in remote_names:
+            kernel_sec.branch.remote_update(git_repo, remote_name)
     backports = get_backports(git_repo, branches, debug)
     c_b_map = kernel_sec.branch.CommitBranchMap(git_repo, branches)
 
@@ -190,9 +191,13 @@ if __name__ == '__main__':
     parser.add_argument('--debug',
                         dest='debug', action='store_true',
                         help='enable debugging output')
+    parser.add_argument('--no-remote-update',
+                        action='store_true',
+                        help='skip remote repository update')
+
     args = parser.parse_args()
     remotes = kernel_sec.branch.get_remotes(args.remote_name,
                                             mainline=args.mainline_remote_name,
                                             stable=args.stable_remote_name)
     kernel_sec.branch.check_git_repo(args.git_repo, remotes)
-    main(args.git_repo, remotes, args.debug)
+    main(args.git_repo, remotes, args.no_remote_update, args.debug)
