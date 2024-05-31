@@ -177,6 +177,10 @@ def load_cve_announce(f, branches, git_repo):
 
     for i in range(len(affected)):
         vuln_info[i] = []
+        
+        # CVE-2024-36907 doesn't contain versions in affected[1].
+        if not 'versions' in affected[i]:
+            continue
 
         for j in range(len(affected[i]['versions'])):
             versions = affected[i]['versions'][j]
