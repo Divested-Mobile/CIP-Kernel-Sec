@@ -281,17 +281,31 @@ def load_cve_announce(f, branches, git_repo):
 
     return issue
 
-def main(git_repo):
+def main(git_repo, new_cve_only):
     branches = {
         branch['short_name']: branch
         for branch in kernel_sec.branch.get_live_branches(
             kernel_sec.branch.get_remotes([]))
     }
 
+    new_published_cves = {}
+
     # Create/update Git repository
     os.makedirs(IMPORT_DIR, 0o777, exist_ok=True)
     if os.path.isdir(IMPORT_DIR + '/.git'):
-        subprocess.check_call(['git', 'pull'], cwd=IMPORT_DIR)
+        pull_result = subprocess.run(['git', 'pull'], cwd=IMPORT_DIR, capture_output=True, text=True)
+        if not pull_result.returncode == 0:
+            print("Failed to pull cve announce from repo")
+            return -1
+
+        for line in pull_result.stdout.split('\n'):
+            line = line.strip()
+            print(line)
+            if line.startswith("cve/{reserved => published}"):
+                tmp = line.split(" ")[2].split("}")[-1]
+                cveid = tmp.split("/")[-1]
+                path = f"{IMPORT_DIR}/cve/published{tmp}.json"
+                new_published_cves[cveid] = path
     else:
         subprocess.check_call(
             ['git', 'clone',
@@ -299,8 +313,12 @@ def main(git_repo):
             cwd=IMPORT_DIR)
 
     our_issues = set(kernel_sec.issue.get_list())
-    cve_announces = dict((os.path.basename(name.replace('.json', '')), name) for name in
-                        glob.glob(IMPORT_DIR + '/cve/published/**/CVE-*.json'))
+
+    if new_cve_only:
+        cve_announces = new_published_cves
+    else:
+        cve_announces = dict((os.path.basename(name.replace('.json', '')), name) for name in
+                            glob.glob(IMPORT_DIR + '/cve/published/**/CVE-*.json'))
     
     for cve_id in cve_announces:
         # Test pattern
@@ -311,7 +329,7 @@ def main(git_repo):
         # CVE-2021-46922: backport issue. only stable/5.10 is vulnerable.
         # CVE-2021-46926: no fixes tag in commit log.
         # CVE-2023-52525: doesn't have mainline's fixed commit
-        #if not cve_id == "CVE-2024-26781":
+        #if not cve_id == "CVE-2024-36907":
         #    continue
         print(f"\rChecking {cve_id}", end='')
         announce = cve_announces[cve_id]
@@ -352,6 +370,11 @@ if __name__ == '__main__':
                         help=('git repository from which to get commit infomation '
                             '(default: ../kernel)'),
                         metavar='DIRECTORY')
+    parser.add_argument('--new-cve-only',
+                        dest='new_cve_only',
+                        action='store_true',
+                        help='only check new CVEs')
+
     args = parser.parse_args()
 
-    main(args.git_repo)
+    main(args.git_repo, args.new_cve_only)
