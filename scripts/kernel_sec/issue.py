@@ -332,11 +332,7 @@ def get_id_sort_key(cve_id):
     return _cve_id_arbdig_re.sub(lambda m: '-%07d' % int(m.group(1)), cve_id)
 
 
-ISSUE_STATUS_NOT_AFFECTED = 'not affected'
-ISSUE_STATUS_NOT_FIXED = 'not fixed'
-ISSUE_STATUS_FIXED = 'fixed'
-
-def status_on_branch(issue, branch, is_commit_in_branch):
+def affects_branch(issue, branch, is_commit_in_branch):
     branch_name = branch['short_name']
 
     # If it was not introduced on this branch, and was introduced on
@@ -345,30 +341,25 @@ def status_on_branch(issue, branch, is_commit_in_branch):
     if introduced:
         if introduced.get('mainline') == 'never' and \
            (branch_name == 'mainline' or branch_name not in introduced):
-            return ISSUE_STATUS_NOT_AFFECTED
+            return False
         if branch_name not in introduced:
             for commit in introduced['mainline']:
                 if is_commit_in_branch(commit, branch):
                     break
             else:
-                return ISSUE_STATUS_NOT_AFFECTED
+                return False
 
     # If it was fixed on this branch, or fixed on mainline before
     # the branch point, branch is not affected
     fixed = issue.get('fixed-by', {})
     if fixed:
         if fixed.get(branch_name, 'never') != 'never':
-            return ISSUE_STATUS_NOT_AFFECTED
+            return False
         if fixed.get('mainline', 'never') != 'never':
             for commit in fixed['mainline']:
                 if not is_commit_in_branch(commit, branch):
                     break
             else:
-                return ISSUE_STATUS_FIXED
+                return False
 
-    return ISSUE_STATUS_NOT_FIXED
-
-def affects_branch(issue, branch, is_commit_in_branch):
-    status = status_on_branch(issue, branch, is_commit_in_branch)
-
-    return status == ISSUE_STATUS_NOT_FIXED
+    return True

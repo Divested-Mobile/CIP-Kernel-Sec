@@ -19,22 +19,9 @@ import kernel_sec.branch
 import kernel_sec.issue
 import kernel_sec.version
 
-import yaml
-
-class CustomQuoteDumper(yaml.Dumper):
-    def increase_indent(self, flow=False, indentless=False):
-        return super(CustomQuoteDumper, self).increase_indent(flow, False)
-
-def quoted_presenter(dumper, data):
-    if isinstance(data, str):
-        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
-    return dumper.represent_data(data)
 
 def main(git_repo, remotes, only_fixed_upstream,
-         include_ignored, show_description,
-         include_fixed, output_format,
-         output_filename,
-         *branch_names):
+         include_ignored, show_description, *branch_names):
     if not branch_names:
         branch_names = ['stable/*']
         if not only_fixed_upstream:
@@ -108,8 +95,6 @@ def main(git_repo, remotes, only_fixed_upstream,
             branch['full_name'] = branch['short_name']
 
     branch_issues = {}
-    branch_fixed = {}
-    branch_ignored = {}
     issues = set(kernel_sec.issue.get_list())
 
     for cve_id in issues:
@@ -127,66 +112,34 @@ def main(git_repo, remotes, only_fixed_upstream,
 
             # Should this issue be ignored for this branch?
             if not include_ignored and ignore.get(branch_name):
-                branch_ignored.setdefault(branch['full_name'], []).append(cve_id)
                 continue
 
             # Check if the branch is affected. If not and the issue was fixed
             # on that branch, then make sure the tag contains that fix
-            status = kernel_sec.issue.status_on_branch(issue, branch, c_b_map.is_commit_in_branch)
-            if kernel_sec.issue.ISSUE_STATUS_NOT_FIXED == status:
+            if kernel_sec.issue.affects_branch(
+                    issue, branch, c_b_map.is_commit_in_branch):
                 branch_issues.setdefault(
                     branch['full_name'], []).append(cve_id)
             elif 'tag' in branch and fixed:
                 if fixed.get(branch_name, 'never') == 'never':
-                    branch_ignored.setdefault(branch['full_name'], []).append(cve_id)
                     continue
                 for commit in fixed[branch_name]:
                     if commit not in tag_commits[branch['tag']]:
                         branch_issues.setdefault(
                             branch['full_name'], []).append(cve_id)
                         break
-                if branch['full_name'] in branch_issues and \
-                    not cve_id in branch_issues[branch['full_name']]:
-                        branch_fixed.setdefault(branch['full_name'], []).append(cve_id)
-            else:
-                branch_fixed.setdefault(branch['full_name'], []).append(cve_id)
 
-    if output_format == 'plain':
-        for branch in branches:
-            sorted_cve_ids = sorted(
-                branch_issues.get(branch['full_name'], []),
-                key=kernel_sec.issue.get_id_sort_key)
-            if show_description:
-                print('%s:' % branch['full_name'])
-                for cve_id in sorted_cve_ids:
-                    print(cve_id, '=>',
-                        kernel_sec.issue.load(cve_id).get('description', 'None'))
-            else:
-                print('%s:' % branch['full_name'], *sorted_cve_ids)
-    elif output_format == 'yaml':
-        all_data = {}
-        for branch in branches:
-            branch_name = branch['full_name']
-            sorted_affected_cve_ids = sorted(branch_issues.get(branch_name, []),
-                                                key=kernel_sec.issue.get_id_sort_key)
-            sorted_fixed_cve_ids = sorted(branch_fixed.get(branch_name, []),
-                                                key=kernel_sec.issue.get_id_sort_key)
-            sorted_ignored_cve_ids = sorted(branch_ignored.get(branch_name, []),
-                                                key=kernel_sec.issue.get_id_sort_key)
-            all_data[branch_name] = {
-                'affected': sorted_affected_cve_ids,
-                'fixed': sorted_fixed_cve_ids,
-                'ignored': sorted_ignored_cve_ids,
-            }
-
-        yaml.add_representer(str, quoted_presenter, Dumper=CustomQuoteDumper)
-
-        if output_filename is None:
-            output = yaml.dump(all_data, Dumper=CustomQuoteDumper, default_flow_style=False)
-            print(output)
+    for branch in branches:
+        sorted_cve_ids = sorted(
+            branch_issues.get(branch['full_name'], []),
+            key=kernel_sec.issue.get_id_sort_key)
+        if show_description:
+            print('%s:' % branch['full_name'])
+            for cve_id in sorted_cve_ids:
+                print(cve_id, '=>',
+                      kernel_sec.issue.load(cve_id).get('description', 'None'))
         else:
-            with open(output_filename, "w") as f:
-                yaml.dump(all_data, f, Dumper=CustomQuoteDumper, default_flow_style=False)
+            print('%s:' % branch['full_name'], *sorted_cve_ids)
 
 
 if __name__ == '__main__':
@@ -226,20 +179,10 @@ if __name__ == '__main__':
                               'e.g. stable/4.14 stable/4.4:v4.4.107 '
                               'v4.4.181-cip33 cip/4.19:myproduct-v33'),
                         metavar='[BRANCH[:TAG]|TAG]')
-    parser.add_argument('--include-fixed',
-                        action='store_true',
-                        help='include issues that have been fixed.')
-    parser.add_argument('--output-format',
-                        dest='output_format',
-                        default='plain',
-                        help='Output format can be plain/yaml')
-    parser.add_argument('--output-filename',
-                        dest='output_filename',
-                        help='Output file name. This option is enabled if output format is yaml')
     args = parser.parse_args()
     remotes = kernel_sec.branch.get_remotes(args.remote_name,
                                             mainline=args.mainline_remote_name,
                                             stable=args.stable_remote_name)
     kernel_sec.branch.check_git_repo(args.git_repo, remotes)
     main(args.git_repo, remotes, args.only_fixed_upstream,
-         args.include_ignored, args.show_description, args.include_fixed, args.output_format, args.output_filename, *args.branches)
+         args.include_ignored, args.show_description, *args.branches)
