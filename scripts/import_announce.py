@@ -281,7 +281,7 @@ def load_cve_announce(f, branches, git_repo):
 
     return issue
 
-def main(git_repo, new_cve_only):
+def main(git_repo, new_cve_only, force_update_comment):
     branches = {
         branch['short_name']: branch
         for branch in kernel_sec.branch.get_live_branches(
@@ -347,7 +347,8 @@ def main(git_repo, new_cve_only):
                 ours = theirs
             else:
                 # Remove comment by cip/cip-kernel-sec from theirs to not modify old data
-                theirs.pop('comments', None)
+                if not force_update_comment:
+                    theirs.pop('comments', None)
                 ours = kernel_sec.issue.load(cve_id)
                 kernel_sec.issue.validate(ours)
                 if not kernel_sec.issue.merge_into(ours, theirs):
@@ -371,10 +372,12 @@ if __name__ == '__main__':
                             '(default: ../kernel)'),
                         metavar='DIRECTORY')
     parser.add_argument('--new-cve-only',
-                        dest='new_cve_only',
                         action='store_true',
                         help='only check new CVEs')
+    parser.add_argument('--force_update_comment',
+                        action='store_true',
+                        help='force update comments')
 
     args = parser.parse_args()
 
-    main(args.git_repo, args.new_cve_only)
+    main(args.git_repo, args.new_cve_only, args.force_update_comment)
