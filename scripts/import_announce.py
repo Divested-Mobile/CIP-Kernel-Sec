@@ -281,7 +281,7 @@ def load_cve_announce(f, branches, git_repo):
 
     return issue
 
-def main(git_repo, new_cve_only, force_update_comment):
+def main(git_repo, new_cve_only, force_update_comment, target_cveid):
     branches = {
         branch['short_name']: branch
         for branch in kernel_sec.branch.get_live_branches(
@@ -329,8 +329,10 @@ def main(git_repo, new_cve_only, force_update_comment):
         # CVE-2021-46922: backport issue. only stable/5.10 is vulnerable.
         # CVE-2021-46926: no fixes tag in commit log.
         # CVE-2023-52525: doesn't have mainline's fixed commit
-        #if not cve_id == "CVE-2024-36907":
-        #    continue
+        if target_cveid:
+            if not cve_id == target_cveid:
+                continue
+
         print(f"\rChecking {cve_id}", end='')
         announce = cve_announces[cve_id]
         with open(announce) as f:
@@ -338,14 +340,17 @@ def main(git_repo, new_cve_only, force_update_comment):
             if theirs is None:
                 continue
 
+            announce_url = get_lore_cve_announce_url(cve_id)
             if cve_id not in our_issues:
                 # New CVE
-                announce_url = get_lore_cve_announce_url(cve_id)
                 if announce_url is not None:
                     theirs['references'].append(announce_url)
 
                 ours = theirs
             else:
+                if not announce_url is None and not announce_url in theirs['references']:
+                    theirs['references'].append(announce_url)
+
                 # Remove comment by cip/cip-kernel-sec from theirs to not modify old data
                 if not force_update_comment:
                     theirs.pop('comments', None)
@@ -374,10 +379,12 @@ if __name__ == '__main__':
     parser.add_argument('--new-cve-only',
                         action='store_true',
                         help='only check new CVEs')
-    parser.add_argument('--force_update_comment',
+    parser.add_argument('--force-update-comment',
                         action='store_true',
                         help='force update comments')
-
+    parser.add_argument('--cveid',
+                        dest='target_cveid',
+                        help='Only import specific CVS')
     args = parser.parse_args()
 
-    main(args.git_repo, args.new_cve_only, args.force_update_comment)
+    main(args.git_repo, args.new_cve_only, args.force_update_comment, args.target_cveid)
