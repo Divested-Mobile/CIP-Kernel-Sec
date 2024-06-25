@@ -281,6 +281,31 @@ def load_cve_announce(f, branches, git_repo):
 
     return issue
 
+def find_published_cves():
+    target = f"{IMPORT_DIR}/cve/published/**/CVE-*"
+    files = glob.glob(target)
+
+    pattern = re.compile(r'CVE-\d{4}-\d+$')
+    cves = []
+    for f in files:
+        tmp = f.split("/")[-1]
+        if pattern.match(tmp):
+            cves.append(tmp)
+ 
+    return cves
+
+def find_created_cves():
+    target = "./issues/CVE-*"
+    files = glob.glob(target)
+
+    cves = []
+
+    for f in files:
+        cve = f.split("/")[-1].split(".")[0]
+        cves.append(cve)
+
+    return cves 
+
 def main(git_repo, new_cve_only, force_update_comment, target_cveid):
     branches = {
         branch['short_name']: branch
@@ -301,11 +326,7 @@ def main(git_repo, new_cve_only, force_update_comment, target_cveid):
         for line in pull_result.stdout.split('\n'):
             line = line.strip()
             print(line)
-            if line.startswith("cve/{reserved => published}"):
-                tmp = line.split(" ")[2].split("}")[-1]
-                cveid = tmp.split("/")[-1]
-                path = f"{IMPORT_DIR}/cve/published{tmp}.json"
-                new_published_cves[cveid] = path
+
     else:
         subprocess.check_call(
             ['git', 'clone',
@@ -315,6 +336,14 @@ def main(git_repo, new_cve_only, force_update_comment, target_cveid):
     our_issues = set(kernel_sec.issue.get_list())
 
     if new_cve_only:
+        published_cves = find_published_cves()
+        created_cves = find_created_cves()
+        cves_diff = list(set(published_cves) - set(created_cves))
+
+        for cveid in cves_diff:
+            tmp = cveid.split('-')
+            path = f"{IMPORT_DIR}/cve/published/{tmp[1]}/{cveid}.json"
+            new_published_cves[cveid] = path
         cve_announces = new_published_cves
     else:
         cve_announces = dict((os.path.basename(name.replace('.json', '')), name) for name in
