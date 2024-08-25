@@ -11,6 +11,7 @@ import os
 import yaml
 import json
 import kernel_sec.issue
+import pprint
 
 IMPORT_DIR = "import/linux-kernel-vulns"
 
@@ -59,6 +60,11 @@ def find_rejected_cves():
     return dict((os.path.basename(name.replace('.json', '')), name) for name in
                         glob.glob(IMPORT_DIR + '/cve/rejected/**/CVE-*.json'))
 
+
+def get_all_cves_in_vulns():
+    return dict((os.path.basename(name.replace('.json', '')), name) for name in
+                        glob.glob(IMPORT_DIR + '/cve/**/**/CVE-*.json'))
+
 def get_rejected_cves_in_cip_kernel_sec():
     rejected_files = []
 
@@ -73,10 +79,17 @@ def get_rejected_cves_in_cip_kernel_sec():
 
 def rejected_to_published(rejected_in_linux):
     rejected_in_cip = get_rejected_cves_in_cip_kernel_sec()
+    all_cves_in_vulns = get_all_cves_in_vulns()
 
-    diff = list(rejected_in_cip.keys() - rejected_in_linux.keys())
-    import pprint
-    for cve in diff:
+    for cve in rejected_in_cip:
+        if cve in rejected_in_linux:
+            #print(f"{cve} is already rejected")
+            continue
+        
+        if not cve in all_cves_in_vulns:
+            #print(f"{cve} is not managed in vulns")
+            continue
+
         with open(rejected_in_cip[cve]) as f:
             yml = yaml.safe_load(f.read())
             yml['description'] = yml['description'].replace(f"{REJECTED_TITLE_PREFIX}: ", '')
