@@ -1,0 +1,10 @@
+triage:
+  image: registry.gitlab.com/cip-project/cip-kernel/kernel-cve-triage:v0
+  rules:
+    - if: $CI_COMMIT_MESSAGE =~ /^Add CVE/
+  script:
+    - /opt/triage-kernels.sh
+  artifacts:
+    expire_in: 1 month
+    paths:
+      - reports/*.json
